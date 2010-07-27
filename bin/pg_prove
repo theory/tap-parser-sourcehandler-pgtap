@@ -9,7 +9,7 @@ $|++;
 
 Getopt::Long::Configure(qw(no_ignore_case bundling pass_through));
 
-my $opts = { color => 1 };
+my $opts = { color => 1, failures => 1 };
 
 Getopt::Long::GetOptions(
     'psql-bin|b=s' => \$opts->{psql},
@@ -23,6 +23,7 @@ Getopt::Long::GetOptions(
     'match|x=s'    => \$opts->{match},
     'version|V'    => \$opts->{version},
     'ext=s@'       => \$opts->{ext},
+    'failures|f'   => \$opts->{failures},
     'help|H|?'     => \$opts->{help},
     'man|m'        => \$opts->{man},
 ) or require Pod::Usage && Pod::Usage::pod2usage(2);
@@ -67,7 +68,8 @@ my $app = $prove_class->new;
 $app->process_args(
     @ARGV,
     (map { ('--ext' => $_) } @{ $opts->{ext} || ['.pg'] }),
-    qw(--source pgTAP),
+    qw(--source pgTAP --failures),
+    ($opts->{failures} ? ('--failures') : ()),
     (map {
         ('--pgtap-option' => "$_=$opts->{$_}")
     } grep {
@@ -102,17 +104,19 @@ pg_prove - A command-line tool for running and harnessing pgTAP tests
 
 =head1 Usage
 
-  pg_prove -d template1 test*.sql
-  pg_prove -d testdb -s testschema
+  pg_prove tests/
+  pg_prove --dbname template1 test*.sql
+  pg_prove -d testdb --runtests
 
 =head1 Description
 
-C<pg_prove> is a command-line application to run one or more pgTAP tests in a
-PostgreSQL database. The output of the tests is harvested and processed by
-L<TAP::Harness|TAP::Harness> in order to summarize the results of the test.
+C<pg_prove> is a command-line application to run one or more
+L<pgTAP|http://pgtap.org/> tests in a PostgreSQL database. The output of the
+tests is harvested and processed by L<TAP::Harness|TAP::Harness> in order to
+summarize the results of the test.
 
-Tests can be written and run in one of two ways, as SQL scripts or as database
-functions.
+Tests can be written and run in one of two ways, as SQL scripts or as
+xUnit-style database functions.
 
 =head2 Test Scripts
 
@@ -131,15 +135,16 @@ installed in the database:
     SELECT * FROM finish();
     ROLLBACK;
 
-Now run the tests by passing the list of SQL script names to C<pg_prove>.
-Here’s what it looks like when the pgTAP tests are run with C<pg_prove>
+Now run the tests by passing the list of SQL script names or the name of a
+test directory to C<pg_prove>. Here’s what it looks like when the pgTAP tests
+are run with C<pg_prove>
 
-    % pg_prove -U postgres sql/*.sql
-    sql/coltap.....ok
-    sql/hastap.....ok
-    sql/moretap....ok
-    sql/pg73.......ok
-    sql/pktap......ok
+    % pg_prove -U postgres tests/
+    tests/coltap.....ok
+    tests/hastap.....ok
+    tests/moretap....ok
+    tests/pg73.......ok
+    tests/pktap......ok
     All tests successful.
     Files=5, Tests=216,  1 wallclock secs ( 0.06 usr  0.02 sys +  0.08 cusr  0.07 csys =  0.23 CPU)
     Result: PASS
@@ -155,7 +160,7 @@ values returned by pgTAP functions, like so:
         INSERT INTO users (nick) VALUES ('theory');
     $$ LANGUAGE plpgsql;
 
-    CREATE OR REPLACE FUNCTION test_user(
+    Create OR REPLACE FUNCTION test_user(
     ) RETURNS SETOF TEXT AS $$
         SELECT is( nick, 'theory', 'Should have nick') FROM users;
     END;
@@ -164,7 +169,7 @@ values returned by pgTAP functions, like so:
 Once you have these functions defined in your database, you can run them with
 C<pg_prove> by using the C<--runtests> option.
 
-    % pg_prove -d myapp -r
+    % pg_prove --dbname mydb --runtests
     runtests()....ok
     All tests successful.
     Files=1, Tests=32,  0 wallclock secs ( 0.02 usr  0.01 sys +  0.01 cusr  0.00 csys =  0.04 CPU)
@@ -172,74 +177,61 @@ C<pg_prove> by using the C<--runtests> option.
 
 Be sure to pass the C<--schema> option if your test functions are all in one
 schema, and the C<--match> option if they have names that don’t start with
-“test”. For example, if you have all of your test functions in “test” schema
-and I<ending> with “test,” run the tests like so:
+“test”. For example, if you have all of your test functions in the “test”
+schema and I<ending> with “test,” run the tests like so:
 
-    pg_prove -d myapp --schema test --match 'test$'
+    pg_prove --dbname mydb --schema test --match 'test$'
 
 =head1 Options
 
-Boolean options:
+ -b   --psql-bin PSQL        Location of the C<psql> client.
+ -d,  --dbname DBNAME        Database to which to connect.
+ -U,  --username USERNAME    User with which to connect.
+ -h,  --host HOST            Host to which to connect.
+ -p,  --port PORT            Port to which to connect.
+ -P,  --pset OPTION=VALUE    Set psql key/value printing option.
+ -R   --runtests             Run xUnit test using C<runtests()>.
+ -s,  --schema SCHEMA        Schema in which to find xUnit tests.
+ -x,  --match REGEX          Regular expression to find xUnit tests.
 
- -v,  --verbose         Print all test lines.
- -l,  --lib             Add 'lib' to the path for your tests (-Ilib).
-      --blib            Add 'blib/lib' and 'blib/arch' to the path for
-                        your tests
-      --shuffle         Run the tests in random order.
- -c,  --color           Colored test output (default).
-      --nocolor         Do not color test output.
-      --count           Show the X/Y test count when not verbose
-                        (default)
-      --nocount         Disable the X/Y test count.
- -D   --dry             Dry run. Show test that would have run.
-      --ext             Set the extension for tests (default '.t')
- -f,  --failures        Show failed tests.
- -o,  --comments        Show comments.
-      --ignore-exit     Ignore exit status from test scripts.
-      --merge           Merge test scripts' STDERR with their STDOUT.
- -r,  --recurse         Recursively descend into directories.
-      --reverse         Run the tests in reverse order.
- -q,  --quiet           Suppress some test output while running tests.
- -Q,  --QUIET           Only print summary results.
-      --parse           Show full list of TAP parse errors, if any.
-      --directives      Only show results with TODO or SKIP directives.
-      --timer           Print elapsed time after each test.
-      --trap            Trap Ctrl-C and print summary on interrupt.
-      --normalize       Normalize TAP output in verbose output
- -T                     Enable tainting checks.
- -t                     Enable tainting warnings.
- -W                     Enable fatal warnings.
- -w                     Enable warnings.
- -H,  --help            Display this help
- -?,                    Display this help
- -m,  --man             Longer manpage for prove
-      --norc            Don't process default .proverc
- -R   --runtests        Run xUnit test using C<runtests()>.
+      --ext                  Set the extension for tests (default F<.pg>)
+ -r,  --recurse              Recursively descend into directories.
+      --ignore-exit          Ignore exit status from test scripts.
+      --trap                 Trap C<Ctrl-C> and print summary on interrupt.
+      --harness              Define test harness to use.
+ -j,  --jobs N               Run N test jobs in parallel (try 9.)
+      --rc RCFILE            Process options from rcfile
+      --norc                 Don't process default F<.proverc>
+      --state OPTION=VALUE   Set persistent state options.
 
-Options that take arguments:
+ -v,  --verbose              Print all test lines.
+ -f,  --failures             Show failed tests.
+ -o,  --comments             Show comments and diagnostics.
+      --directives           Only show results with TODO or SKIP directives.
+ -q,  --quiet                Suppress some test output while running tests.
+ -Q,  --QUIET                Only print summary results.
+      --parse                Show full list of TAP parse errors, if any.
+      --normalize            Normalize TAP output in verbose output
+ -D   --dry                  Dry run. Show test that would have run.
+      --merge                Merge test scripts' C<STDERR> and C<STDOUT>.
+      --timer                Print elapsed time after each test.
+ -c,  --color                Colored test output (default).
+      --nocolor              Do not color test output.
+      --shuffle              Run the tests in random order.
+      --reverse              Run the tests in reverse order.
+ -a,  --archive FILENAME     Store the resulting TAP in an archive file.
+      --formatter            Result formatter to use.
+      --count                Show X/Y test count when not verbose (default)
+      --nocount              Disable the X/Y test count.
 
- -I                     Library paths to include.
- -M                     Load a module.
- -e,  --exec            Interpreter to run the tests ('' for compiled
-                        tests.)
-      --harness         Define test harness to use.  See TAP::Harness.
-      --formatter       Result formatter to use. See FORMATTERS.
-      --source          Load and/or configure a SourceHandler. See
-                        SOURCE HANDLERS.
- -a,  --archive out.tgz Store the resulting TAP in an archive file.
- -j,  --jobs N          Run N test jobs in parallel (try 9.)
-      --state=opts      Control prove's persistent state.
-      --rc=rcfile       Process options from rcfile
- -b   --psql-bin        Location of the C<psql> client.
- -d,  --dbname          Database to which to connect.
- -U,  --username        User with which to connect.
- -h,  --host            Host to which to connect.
- -p,  --port            Port to which to connect.
- -P,  --pset            Set psql key/value printing option.
- -s,  --schema          Schema in which to find xUnit tests.
- -x,  --match           Regular expression to find xUnit tests.
+ -H,  --help                 Print a usage statement and exit.
+ -?,                         Print a usage statement and exit.
+ -m,  --man                  Print the complete documentation and exit.
+ -V,  --version              Print the version number and exit.
 
 =head1 Options Details
+
+=head2 Database Options
 
 =over
 
@@ -251,7 +243,7 @@ Options that take arguments:
   pg_prove -b /usr/local/bin/psql
 
 Path to the C<psql> program, which will be used to actually run the tests.
-Defaults to F<psql>.
+Defaults to F<psql>, which should work well, when it is in your path.
 
 =item C<-d>
 
@@ -309,31 +301,6 @@ Specifies printing options in the style of C<\pset> in the C<psql> program.
 See L<http://www.postgresql.org/docs/current/static/app-psql.html> for details
 on the supported options.
 
-=item C<-v>
-
-=item C<--verbose>
-
-  pg_prove --verbose
-  pg_prove -v
-
-Display standard output of test scripts while running them. This behavior can
-also be triggered by setting the C<$TEST_VERBOSE> environment variable to a
-true value.
-
-=item C<-f>
-
-=item C<--failures>
-
-Show failed tests. Enabled by default.
-
-=item C<-o>
-
-=item C<--comments>
-
-Show comments.
-
-=item C<-r>
-
 =item C<--runtests>
 
   pg_prove --runtests
@@ -386,9 +353,271 @@ Will have C<psql> execute the C<runtests()> function like so:
 
  SELECT * FROM runtests('testing'::name, '^test_widgets$'::text);
 
-=item C<--blib>
+=back
 
-Add F<blib/lib> and F<blib/arch> to the path for your tests.
+=head2 Behavioral Options
+
+=over
+
+=item C<--ext>
+
+  pg_prove --ext .sql tests/
+
+Set the extension for test files (default F<.pg>). May be specified multiple
+times if you have test scripts with multiple extensions:
+
+  pg_prove --ext .sql --ext .pg --ext .pgt
+
+=item C<-r>
+
+=item C<--recurse>
+
+  pg_prove --recurse tests/
+  pg_prove --recurse sql/
+
+Recursively descend into directories when searching for tests. Not relevant
+with C<--runtests>.
+
+=item C<--ignore-exit>
+
+  pg_prove --ignore-exit
+
+Ignore exit status from test scripts. Normally if a script triggers a database
+exception, C<psql> will exit with an error code and, even if all tests passed,
+the test will be considered a failure. Use C<--ignore-exit> to ignore such
+situations (at your own peril).
+
+=item C<--trap>
+
+  pg_prove --trap
+
+Trap C<Ctrl-C> and print a summary on interrupt.
+
+=item C<--harness>
+
+  pg_prove --harness TAP::Harness::Color
+
+Specify a subclass of L<TAP::Harness> to use for the test harness. Defaults to
+TAP::Harness (unless C<--archive> is specified, in which case it uses
+L<TAP::Harness::Archive>).
+
+=item C<-j>
+
+=item C<-jobs>
+
+Run N test jobs in parallel (try 9.)
+
+=item C<--rc>
+
+  pg_prove --rc pg_prove.rc
+
+Process options from the specified configuration file.
+
+If C<--rc> is not specified and F<./.proverc> or F<~/.proverc> exist, they
+will be read and any options they contain processed before the command line
+options. Options in configuration files are specified in the same way as
+command line options:
+
+           # .proverc
+           --state=hot,fast,save
+           -j9
+
+Under Windows and VMS the option file is named F<_proverc> rather than
+F<.proverc> and is sought only in the current directory.
+
+=item C<--norc>
+
+Do not process F<./.proverc> or F<~/.proverc>.
+
+=item C<--state>
+
+You can ask C<pg_prove> to remember the state of previous test runs and select
+and/or order the tests to be run based on that saved state.
+
+The C<--state> switch requires an argument which must be a comma separated
+list of one or more of the following options.
+
+=over
+
+=item C<last>
+
+Run the same tests as the last time the state was saved. This makes it
+possible, for example, to recreate the ordering of a shuffled test.
+
+    # Run all tests in random order
+    pg_prove --state save --shuffle
+
+    # Run them again in the same order
+    pg_prove --state last
+
+=item C<failed>
+
+Run only the tests that failed on the last run.
+
+    # Run all tests
+    pg_prove --state save
+
+    # Run failures
+    pg_prove --state failed
+
+If you also specify the C<save> option newly passing tests will be
+excluded from subsequent runs.
+
+    # Repeat until no more failures
+    pg_prove --state failed,save
+
+=item C<passed>
+
+Run only the passed tests from last time. Useful to make sure that no new
+problems have been introduced.
+
+=item C<all>
+
+Run all tests in normal order. Multple options may be specified, so to run all
+tests with the failures from last time first:
+
+    pg_prove --state failed,all,save
+
+=item C<hot>
+
+Run the tests that most recently failed first. The last failure time of each
+test is stored. The C<hot> option causes tests to be run in most-recent-
+failure order.
+
+    pg_prove --state hot,save
+
+Tests that have never failed will not be selected. To run all tests with the
+most recently failed first use
+
+    pg_prove --state hot,all,save
+
+This combination of options may also be specified thus
+
+    pg_prove --state adrian
+
+=item C<todo>
+
+Run any tests with todos.
+
+=item C<slow>
+
+Run the tests in slowest to fastest order. This is useful in conjunction with
+the C<-j> parallel testing switch to ensure that your slowest tests start
+running first.
+
+    pg_prove --state slow -j9
+
+=item C<fast>
+
+Run test tests in fastest to slowest order.
+
+=item C<new>
+
+Run the tests in newest to oldest order based on the modification times of the
+test scripts.
+
+=item C<old>
+
+Run the tests in oldest to newest order.
+
+=item C<fresh>
+
+Run those test scripts that have been modified since the last test run.
+
+=item C<save>
+
+Save the state on exit. The state is stored in a file called F<.pg_prove>
+(F<_pg_prove> on Windows and VMS) in the current directory.
+
+=back
+
+The C<--state> switch may be used more than once.
+
+    pg_prove --state hot --state all,save
+
+=back
+
+=head2 Display Options
+
+=over
+
+=item C<-v>
+
+=item C<--verbose>
+
+  pg_prove --verbose
+  pg_prove -v
+
+Display standard output of test scripts while running them. This behavior can
+also be triggered by setting the C<$TEST_VERBOSE> environment variable to a
+true value.
+
+=item C<-f>
+
+=item C<--failures>
+
+  pg_prove --failures
+  pg_prove -f
+
+Show failed tests. Enabled by default.
+
+=item C<-o>
+
+=item C<--comments>
+
+Show comments, such as diagnostics output by C<diag()>.
+
+=item C<--directives>
+
+  pg_prove --directives
+
+Only show results with TODO or SKIP directives.
+
+=item C<-q>
+
+=item C<--quiet>
+
+  pg_prove --quiet
+  pg_prove -q
+
+Suppress some test output while running tests.
+
+=item C<-Q>
+
+=item C<--QUIET>
+
+  pg_prove --QUIET
+  pg_prove -Q
+
+Only print summary results.
+
+=item C<--parse>
+
+  pg_prove --parse
+
+Enables the display of any TAP parsing errors as tests run. Useful for
+debugging new TAP emitters.
+
+=item C<--normalize>
+
+  pg_prove --normalize
+
+Normalize TAP output in verbose output. Errors in the harnessed TAP corrected
+by the parser will be corrected.
+
+=item C<--dry>
+
+=item C<-D>
+
+  pg_prove --dry tests/
+  pg_prove -D
+
+Dry run. Just outputs a list of the tests that would have been run.
+
+=item C<--merge>
+
+Merge test scripts' C<STDERR> with their C<STDOUT>. Not really relevant to
+pgTAP tests, which only print to STDERR when an exception is thrown.
 
 =item C<-t>
 
@@ -419,11 +648,24 @@ Do not display test results in color.
 
 =item C<--shuffle>
 
-Run the tests in random order. Not relevant when used with C<--runtests>.
+  pg_prove --shuffle tests/
+
+Test scripts are normally run in alphabetical order. Use C<--reverse> to run
+them in in random order. Not relevant when used with C<--runtests>.
 
 =item C<--reverse>
 
-Run the tests in reverse order. Not relevant when used with C<--runtests>.
+  pg_prove --reverse tests/
+
+Test scripts are normally run in alphabetical order. Use C<--reverse> to run
+them in reverse order. Not relevant when used with C<--runtests>.
+
+=item C<-a>
+
+=item C<--archive>
+
+  pg_prove --archive tap.tar.gz
+  pg_prove -a test_output.tar
 
 =item C<-f>
 
@@ -436,104 +678,26 @@ The name of the class to use to format output. The default is
 L<TAP::Formatter::Console|TAP::Formatter::Console>, or
 L<TAP::Formatter::File|TAP::Formatter::File> if the output isn’t a TTY.
 
-=item C<--ext>
-
-Set the extension for test files (default F<.pg>). May be specified multipe
-times.
-
 =item C<--count>
 
-Show the X/Y test count when not verbose (default).
+  pg_prove --count
+
+Show the X/Y test count as tests run when not verbose (default).
 
 =item C<--nocount>
 
-Disable the X/Y test count.
+  pg_prove --nocount
 
-=item C<-a>
-
-=item C<--archive>
-
-  pg_prove --archive tap.tar.gz
-  pg_prove -a test_output.tar
+Disable the display of the X/Y test count as tests run.
 
 Send the TAP output to a TAP archive file as wel as to the normal output
 destination. The archive formats supported are F<.tar> and F<.tar.gz>.
 
-=item C<-r>
+=back
 
-=item C<--recurse>
+=head2 Metadata Options
 
-Recursively descend into directories when searching for tests. Not relevant
-with C<--runtests>.
-
-=item C<--ignore-exit>
-
-Ignore exit status from test scripts.
-
-=item C<--merge>
-
-Merge test scripts' STDERR with their STDOUT. Not really relevant to pgTAP
-tests, which only print to STDERR when an exception is thrown.
-
-=item C<-l>
-
-=item C<--lib>
-
-Add F<lib> to the path for your tests (C<-Ilib>).
-
-=item C<-I>
-
-Specify extra paths to Perl library paths to include.
-
-=item C<-q>
-
-=item C<--quiet>
-
-Suppress some test output while running tests.
-
-=item C<-Q>
-
-=item C<--QUIET>
-
-Only print summary results.
-
-=item C<--parse>
-
-Show full list of TAP parse errors, if any.
-
-=item C<--directives>
-
-Only show results with TODO or SKIP directives.
-
-=item C<--trap>
-
-Trap Ctrl-C and print summary on interrupt.
-
-=item C<--normalize>
-
-Normalize TAP output in verbose output
-
-=item C<--norc>
-
-Don't process default F<.proverc>
-
-=item C<--harness>
-
-Define test harness to use.  See TAP::Harness.
-
-=item C<-j
-
-=item C<-jobs>
-
-Run N test jobs in parallel (try 9.)
-
-=item C<--state=opts>
-
-Control C<pg_prove>'s persistent state.
-
-=item C<--rc>
-
-Process options from rcfile
+=over
 
 =item C<-H>
 
