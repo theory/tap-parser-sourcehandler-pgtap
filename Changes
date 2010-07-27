@@ -1,0 +1,9 @@
+Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
+
+3.22
+      - Moved from the Test::Harness distribution to its own distribution.
+      - No assume that a test string starting with "pgtap:" and is not a file
+        name is SQL to be executed.
+      - Moved `pg_prove` from the pgTAP distribution and rewrote it to use
+        App::Prove and pgTAP.
+        
