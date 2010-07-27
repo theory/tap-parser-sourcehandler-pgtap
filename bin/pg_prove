@@ -18,12 +18,12 @@ Getopt::Long::GetOptions(
     'host|h=s'     => \$opts->{host},
     'port|p=s'     => \$opts->{port},
     'pset|P=s%'    => \$opts->{pset},
-    'runtests|r'   => \$opts->{runtests},
+    'runtests|R'   => \$opts->{runtests},
     'schema|s=s'   => \$opts->{schema},
     'match|x=s'    => \$opts->{match},
     'version|V'    => \$opts->{version},
     'ext=s@'       => \$opts->{ext},
-    'help|H'       => \$opts->{help},
+    'help|H|?'     => \$opts->{help},
     'man|m'        => \$opts->{man},
 ) or require Pod::Usage && Pod::Usage::pod2usage(2);
 
@@ -66,7 +66,7 @@ if ($opts->{runtests} || $opts->{schema} || $opts->{match}) {
 my $app = $prove_class->new;
 $app->process_args(
     @ARGV,
-    (map { ('--ext' => $_) } @{ $opts->{ext} || ['.my'] }),
+    (map { ('--ext' => $_) } @{ $opts->{ext} || ['.pg'] }),
     qw(--source pgTAP),
     (map {
         ('--pgtap-option' => "$_=$opts->{$_}")
@@ -96,56 +96,86 @@ PGPROVE: {
 
 __END__
 
-=encoding utf8
-
 =head1 Name
 
-pg_prove - Run pgTAP MySQL tests through a TAP harness.
+pg_prove - A command-line tool for running and harnessing pgTAP tests
 
 =head1 Usage
 
-  pg_prove -D myapp
-  pg_prove -D testdb tests/
-  pg_prove sometest.sql
+  pg_prove -d template1 test*.sql
+  pg_prove -d testdb -s testschema
 
 =head1 Description
 
 C<pg_prove> is a command-line application to run one or more pgTAP tests in a
-MySQL database. The output of the tests is harvested and processed by
+PostgreSQL database. The output of the tests is harvested and processed by
 L<TAP::Harness|TAP::Harness> in order to summarize the results of the test.
 
-Tests can be written and run as SQL scripts. If no files or directories are
-supplied, C<pg_prove> looks for all files matching the pattern C<t/*.my>. If
-the tests fail, C<pg_prove> will exit with non-zero status.
+Tests can be written and run in one of two ways, as SQL scripts or as database
+functions.
 
 =head2 Test Scripts
 
 pgTAP test scripts should consist of a series of SQL statements that output
 TAP. Here’s a simple example that assumes that the pgTAP functions have been
-installed in the "tap" database:
+installed in the database:
 
     -- Start transaction and plan the tests.
     BEGIN;
-    SELECT tap.plan(1);
+    SELECT plan(1);
 
     -- Run the tests.
-    SELECT tap.pass( 'My test passed, w00t!' );
+    SELECT pass( 'My test passed, w00t!' );
 
     -- Finish the tests and clean up.
-    CALL finish();
+    SELECT * FROM finish();
     ROLLBACK;
 
 Now run the tests by passing the list of SQL script names to C<pg_prove>.
 Here’s what it looks like when the pgTAP tests are run with C<pg_prove>
 
-    % pg_prove -u root sql/*.sql
-    t/coltap.....ok
-    t/hastap.....ok
-    t/moretap....ok
-    t/pktap......ok
+    % pg_prove -U postgres sql/*.sql
+    sql/coltap.....ok
+    sql/hastap.....ok
+    sql/moretap....ok
+    sql/pg73.......ok
+    sql/pktap......ok
     All tests successful.
-    Files=4, Tests=216,  1 wallclock secs ( 0.06 usr  0.02 sys +  0.08 cusr  0.07 csys =  0.23 CPU)
+    Files=5, Tests=216,  1 wallclock secs ( 0.06 usr  0.02 sys +  0.08 cusr  0.07 csys =  0.23 CPU)
     Result: PASS
+
+=head2 xUnit Test Functions
+
+pgTAP test functions should return a set of text, and then simply return the
+values returned by pgTAP functions, like so:
+
+    CREATE OR REPLACE FUNCTION setup_insert(
+    ) RETURNS SETOF TEXT AS $$
+        RETURN NEXT is( MAX(nick), NULL, 'Should have no users') FROM users;
+        INSERT INTO users (nick) VALUES ('theory');
+    $$ LANGUAGE plpgsql;
+
+    CREATE OR REPLACE FUNCTION test_user(
+    ) RETURNS SETOF TEXT AS $$
+        SELECT is( nick, 'theory', 'Should have nick') FROM users;
+    END;
+    $$ LANGUAGE sql;
+
+Once you have these functions defined in your database, you can run them with
+C<pg_prove> by using the C<--runtests> option.
+
+    % pg_prove -d myapp -r
+    runtests()....ok
+    All tests successful.
+    Files=1, Tests=32,  0 wallclock secs ( 0.02 usr  0.01 sys +  0.01 cusr  0.00 csys =  0.04 CPU)
+    Result: PASS
+
+Be sure to pass the C<--schema> option if your test functions are all in one
+schema, and the C<--match> option if they have names that don’t start with
+“test”. For example, if you have all of your test functions in “test” schema
+and I<ending> with “test,” run the tests like so:
+
+    pg_prove -d myapp --schema test --match 'test$'
 
 =head1 Options
 
@@ -155,13 +185,13 @@ Boolean options:
  -l,  --lib             Add 'lib' to the path for your tests (-Ilib).
       --blib            Add 'blib/lib' and 'blib/arch' to the path for
                         your tests
- -s,  --shuffle         Run the tests in random order.
+      --shuffle         Run the tests in random order.
  -c,  --color           Colored test output (default).
       --nocolor         Do not color test output.
       --count           Show the X/Y test count when not verbose
                         (default)
       --nocount         Disable the X/Y test count.
-      --dry             Dry run. Show test that would have run.
+ -D   --dry             Dry run. Show test that would have run.
       --ext             Set the extension for tests (default '.t')
  -f,  --failures        Show failed tests.
  -o,  --comments        Show comments.
@@ -174,7 +204,7 @@ Boolean options:
       --parse           Show full list of TAP parse errors, if any.
       --directives      Only show results with TODO or SKIP directives.
       --timer           Print elapsed time after each test.
-      --trap            Trap C<Ctrl-C> and print summary on interrupt.
+      --trap            Trap Ctrl-C and print summary on interrupt.
       --normalize       Normalize TAP output in verbose output
  -T                     Enable tainting checks.
  -t                     Enable tainting warnings.
@@ -182,13 +212,13 @@ Boolean options:
  -w                     Enable warnings.
  -H,  --help            Display this help
  -?,                    Display this help
- -m,  --man             Longer manpage for pg_prove
+ -m,  --man             Longer manpage for prove
       --norc            Don't process default .proverc
+ -R   --runtests        Run xUnit test using C<runtests()>.
 
 Options that take arguments:
 
  -I                     Library paths to include.
- -P                     Load plugin (searches App::Prove::Plugin::*.)
  -M                     Load a module.
  -e,  --exec            Interpreter to run the tests ('' for compiled
                         tests.)
@@ -200,12 +230,14 @@ Options that take arguments:
  -j,  --jobs N          Run N test jobs in parallel (try 9.)
       --state=opts      Control prove's persistent state.
       --rc=rcfile       Process options from rcfile
- -b   --mysql-bin       Location of the C<mysql> client.
- -D,  --database        Database to use.
- -u,  --user            User with which to connect.
- -p,  --password        The password to use when connecting.
+ -b   --psql-bin        Location of the C<psql> client.
+ -d,  --dbname          Database to which to connect.
+ -U,  --username        User with which to connect.
  -h,  --host            Host to which to connect.
- -P,  --port            Port to which to connect.
+ -p,  --port            Port to which to connect.
+ -P,  --pset            Set psql key/value printing option.
+ -s,  --schema          Schema in which to find xUnit tests.
+ -x,  --match           Regular expression to find xUnit tests.
 
 =head1 Options Details
 
@@ -213,62 +245,159 @@ Options that take arguments:
 
 =item C<-b>
 
-=item C<--mysql-bin>
+=item C<--psql-bin>
 
-  pg_prove --mysql-bin /usr/local/mysql/bin/mysql
-  pg_prove -b /usr/local/bin/mysql
+  pg_prove --psql-bin /usr/local/pgsql/bin/psql
+  pg_prove -b /usr/local/bin/psql
 
-Path to the C<mysql> client program, which will be used to actually run the
-tests. Defaults to F<mysql>, which should work well if an executable with that
-name is in your path.
+Path to the C<psql> program, which will be used to actually run the tests.
+Defaults to F<psql>.
 
-=item C<-D>
+=item C<-d>
 
-=item C<--database>
+=item C<--dbname>
 
-  pg_prove --database try
-  pg_prove -D root
+  pg_prove --dbname try
+  pg_prove -d postgres
 
-The name of database to use.
+The name of database to which to connect. Defaults to the value of the
+C<$PGDATABASE> environment variable or to the system username.
 
-=item C<-u>
+=item C<-U>
 
-=item C<--user>
+=item C<--username>
 
-  pg_prove --user foo
-  pg_prove -u root
+  pg_prove --username foo
+  pg_prove -U postgres
 
-The MySQL user name to use when connecting to the server.
-
-=item C<-p>
-
-=item C<--password>
-
-  pg_prove --password foo
-  pg_prove -p root
-
-The password to use when connecting to the server. Specifying a password on
-the command line should be considered insecure. You can use a MySQL option
-file such as F</etc/my.cnf> or the F<.my.cnf> file in your home directory, to
-avoid giving the password on the command line.
+PostgreSQL user name to connect as. Defaults to the value of the C<$PGUSER>
+environment variable or to the operating system name of the user running the
+application.
 
 =item C<-h>
 
 =item C<--host>
 
-  pg_prove --host mysql.example.com
+  pg_prove --host pg.example.com
   pg_prove -h dev.local
 
-Connect to the MySQL server on the given host.
+Specifies the host name of the machine on which the server is running. If the
+value begins with a slash, it is used as the directory for the Unix-domain
+socket. Defaults to the value of the C<$PGHOST> environment variable or
+localhost.
 
 =item C<-p>
 
 =item C<--port>
 
   pg_prove --port 1234
-  pg_prove -P 666
+  pg_prove -p 666
 
-The TCP/IP port number to use for the connection.
+Specifies the TCP port or the local Unix-domain socket file extension on which
+the server is listening for connections. Defaults to the value of the
+C<$PGPORT> environment variable or, if not set, to the port specified at
+compile time, usually 5432.
+
+=item C<-P>
+
+=item C<--pset>
+
+  pg_prove --pset tuples_only=0
+  pg_prove -P null=[NULL]
+
+Specifies printing options in the style of C<\pset> in the C<psql> program.
+See L<http://www.postgresql.org/docs/current/static/app-psql.html> for details
+on the supported options.
+
+=item C<-v>
+
+=item C<--verbose>
+
+  pg_prove --verbose
+  pg_prove -v
+
+Display standard output of test scripts while running them. This behavior can
+also be triggered by setting the C<$TEST_VERBOSE> environment variable to a
+true value.
+
+=item C<-f>
+
+=item C<--failures>
+
+Show failed tests. Enabled by default.
+
+=item C<-o>
+
+=item C<--comments>
+
+Show comments.
+
+=item C<-r>
+
+=item C<--runtests>
+
+  pg_prove --runtests
+  pg_prove -r
+
+Don’t run any test scripts, but just use the C<runtests()> pgTAP function to
+run xUnit tests. This ends up looking like a single test script has been run,
+when in fact no test scripts have been run. Instead, C<pg_prove> tells C<psql>
+to run something like:
+
+  psql --command 'SELECT * FROM runtests()'
+
+You should use this option when you’ve written your tests in xUnit style,
+where they’re all defined in test functions already loaded in the database.
+
+=item C<-s>
+
+=item C<--schema>
+
+  pg_prove --schema test
+  pg_prove -s mytest
+
+Used with C<--runtests>, and, in fact, implicitly forces C<--runtests> to be
+true. This option can be used to specify the name of a schema in which to find
+xUnit functions to run. Basically, it tells C<psql> to run something like:
+
+  psql --command "SELECT * FROM runtests('test'::name)"
+
+=item C<-x>
+
+=item C<--match>
+
+  pg_prove --match 'test$'
+  pg_prove -x _test_
+
+Used with C<--runtests>, and, in fact, implicitly forces C<--runtests> to be
+true. This option can be used to specify a POSIX regular expression that will
+be used to search for xUnit functions to run. Basically, it tells C<psql> to
+run something like:
+
+  psql --command "SELECT * FROM runtests('_test_'::text)"
+
+This will run any visible functions with the string “_test_” in their names.
+This can be especially useful if you just want to run a single test in a
+given schema. For example, this:
+
+  pg_prove --schema testing --match '^test_widgets$'
+
+Will have C<psql> execute the C<runtests()> function like so:
+
+ SELECT * FROM runtests('testing'::name, '^test_widgets$'::text);
+
+=item C<--blib>
+
+Add F<blib/lib> and F<blib/arch> to the path for your tests.
+
+=item C<-t>
+
+=item C<--timer>
+
+  pg_prove --timer
+  pg_prove -t
+
+Print elapsed time after each test file.
 
 =item C<-t>
 
@@ -288,6 +417,14 @@ installed colored output will not be available.
 
 Do not display test results in color.
 
+=item C<--shuffle>
+
+Run the tests in random order. Not relevant when used with C<--runtests>.
+
+=item C<--reverse>
+
+Run the tests in reverse order. Not relevant when used with C<--runtests>.
+
 =item C<-f>
 
 =item C<--formatter>
@@ -297,7 +434,20 @@ Do not display test results in color.
 
 The name of the class to use to format output. The default is
 L<TAP::Formatter::Console|TAP::Formatter::Console>, or
-L<TAP::Formatter::File|TAP::Formatter::File> if the output isn't a TTY.
+L<TAP::Formatter::File|TAP::Formatter::File> if the output isn’t a TTY.
+
+=item C<--ext>
+
+Set the extension for test files (default F<.pg>). May be specified multipe
+times.
+
+=item C<--count>
+
+Show the X/Y test count when not verbose (default).
+
+=item C<--nocount>
+
+Disable the X/Y test count.
 
 =item C<-a>
 
@@ -306,139 +456,88 @@ L<TAP::Formatter::File|TAP::Formatter::File> if the output isn't a TTY.
   pg_prove --archive tap.tar.gz
   pg_prove -a test_output.tar
 
-Send the TAP output to a TAP archive file as well as to the normal output
+Send the TAP output to a TAP archive file as wel as to the normal output
 destination. The archive formats supported are F<.tar> and F<.tar.gz>.
+
+=item C<-r>
+
+=item C<--recurse>
+
+Recursively descend into directories when searching for tests. Not relevant
+with C<--runtests>.
+
+=item C<--ignore-exit>
+
+Ignore exit status from test scripts.
+
+=item C<--merge>
+
+Merge test scripts' STDERR with their STDOUT. Not really relevant to pgTAP
+tests, which only print to STDERR when an exception is thrown.
+
+=item C<-l>
+
+=item C<--lib>
+
+Add F<lib> to the path for your tests (C<-Ilib>).
+
+=item C<-I>
+
+Specify extra paths to Perl library paths to include.
+
+=item C<-q>
+
+=item C<--quiet>
+
+Suppress some test output while running tests.
+
+=item C<-Q>
+
+=item C<--QUIET>
+
+Only print summary results.
+
+=item C<--parse>
+
+Show full list of TAP parse errors, if any.
+
+=item C<--directives>
+
+Only show results with TODO or SKIP directives.
 
 =item C<--trap>
 
-The C<--trap> option will attempt to trap C<SIGINT> (C<Ctrl-C>) during a test
-run and display the test summary even if the run is interrupted
+Trap Ctrl-C and print summary on interrupt.
 
-=item C<--state>
+=item C<--normalize>
 
-You can ask C<pg_prove> to remember the state of previous test runs and select
-and/or order the tests to be run based on that saved state.
+Normalize TAP output in verbose output
 
-The C<--state> switch requires an argument which must be a comma separated
-list of one or more of the following options.
+=item C<--norc>
 
-=over
+Don't process default F<.proverc>
 
-=item C<last>
+=item C<--harness>
 
-Run the same tests as the last time the state was saved. This makes it
-possible, for example, to recreate the ordering of a shuffled test.
+Define test harness to use.  See TAP::Harness.
 
-    # Run all tests in random order
-    $ pg_prove --state=save --shuffle
+=item C<-j
 
-    # Run them again in the same order
-    $ pg_prove --state=last
+=item C<-jobs>
 
-=item C<failed>
+Run N test jobs in parallel (try 9.)
 
-Run only the tests that failed on the last run.
+=item C<--state=opts>
 
-    # Run all tests
-    $ pg_prove --state=save
-
-    # Run failures
-    $ pg_prove --state=failed
-
-If you also specify the C<save> option newly passing tests will be
-excluded from subsequent runs.
-
-    # Repeat until no more failures
-    $ pg_prove --state=failed,save
-
-=item C<passed>
-
-Run only the passed tests from last time. Useful to make sure that no
-new problems have been introduced.
-
-=item C<all>
-
-Run all tests in normal order. Multiple options may be specified, so to run
-all tests with the failures from last time first:
-
-    $ pg_prove --state=failed,all,save
-
-=item C<hot>
-
-Run the tests that most recently failed first. The last failure time of
-each test is stored. The C<hot> option causes tests to be run in most-recent-
-failure order.
-
-    $ pg_prove --state=hot,save
-
-Tests that have never failed will not be selected. To run all tests with
-the most recently failed first use
-
-    $ pg_prove --state=hot,all,save
-
-This combination of options may also be specified thus
-
-    $ pg_prove --state=adrian
-
-=item C<todo>
-
-Run any tests with to-dos.
-
-=item C<slow>
-
-Run the tests in slowest to fastest order. This is useful in conjunction
-with the C<-j> parallel testing switch to ensure that your slowest tests
-start running first.
-
-    $ pg_prove --state=slow -j9
-
-=item C<fast>
-
-Run test tests in fastest to slowest order.
-
-=item C<new>
-
-Run the tests in newest to oldest order based on the modification times
-of the test scripts.
-
-=item C<old>
-
-Run the tests in oldest to newest order.
-
-=item C<fresh>
-
-Run those test scripts that have been modified since the last test run.
-
-=item C<save>
-
-Save the state on exit. The state is stored in a file called F<.prove>
-(F<_prove> on Windows and VMS) in the current directory.
-
-=back
-
-The C<--state> switch may be used more than once.
-
-    $ pg_prove --state=hot --state=all,save
+Control C<pg_prove>'s persistent state.
 
 =item C<--rc>
 
-=item C<--no-rc>
-
-If F<~/.proverc> or F<./.proverc> exist they will be read and any
-options they contain processed before the command line options. Options
-in F<.proverc> are specified in the same way as command line options:
-
-    # .proverc
-    --state=hot,fast,save
-    -j9
-
-Additional option files may be specified with the C<--rc> option.
-Default option file processing is disabled by the C<--norc> option.
-
-Under Windows and VMS the option file is named F<_proverc> rather than
-F<.proverc> and is sought only in the current directory.
+Process options from rcfile
 
 =item C<-H>
+
+=item C<-?>
 
 =item C<--help>
 
@@ -469,13 +568,10 @@ Outputs the program name and version and exits.
 
 =head1 Author
 
-David E. Wheeler <david@kineticode.com>
+David E. Wheeler <dwheeler@cpan.org>
 
-=head1 Copyright and Licence
+=head1 Copyright
 
-Copyright (c) 2010 David E. Wheeler. Some Rights Reserved.
-
-This module is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+Copyright (c) 2008-2010 David E. Wheeler. Some Rights Reserved.
 
 =cut
