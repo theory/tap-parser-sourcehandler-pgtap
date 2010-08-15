@@ -1,5 +1,7 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
+3.23
+
 3.22  2010-08-15T01:06:08
       - Moved from the Test::Harness distribution to its own distribution.
       - No assume that a test string starting with "pgtap:" and is not a file
