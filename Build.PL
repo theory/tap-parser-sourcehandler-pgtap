@@ -5,25 +5,25 @@ use Module::Build;
 my $class = Module::Build->subclass(
     class => 'My::Builder',
     code => q{
-             sub ACTION_code {
-                 use File::Spec::Functions;
-                 my $self = shift;
-                 $self->SUPER::ACTION_code(@_);
-                 # Copy the test scripts and then set the shebang line and make
-                 # sure that they're executable.
-                 my $to_dir = $self->localize_file_path("t/scripts");
-                 my $from   = $self->localize_file_path("t/bin/psql");
-                 my $to     = $self->localize_file_path("$to_dir/psql");
-                 $self->copy_if_modified(
-                     from    => $from,
-                     to_dir  => $to_dir,
-                     flatten => 1,
-                 );
-                 $self->fix_shebang_line($to);
-                 $self->make_executable($to);
-                 $self->add_to_cleanup($to_dir);
-             }
-         },
+        sub ACTION_code {
+            use File::Spec::Functions;
+            my $self = shift;
+            $self->SUPER::ACTION_code(@_);
+            # Copy the test scripts and then set the shebang line and make
+            # sure that they're executable.
+            my $to_dir = $self->localize_file_path("t/scripts");
+            my $from   = $self->localize_file_path("t/bin/psql");
+            my $to     = $self->localize_file_path("$to_dir/psql");
+            $self->copy_if_modified(
+                from    => $from,
+                to_dir  => $to_dir,
+                flatten => 1,
+            );
+            $self->fix_shebang_line($to);
+            $self->make_executable($to);
+            $self->add_to_cleanup($to_dir);
+        }
+    },
 );
 
 $class->new(
