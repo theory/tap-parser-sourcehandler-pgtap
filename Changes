@@ -6,4 +6,6 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
         name is SQL to be executed.
       - Moved `pg_prove` from the pgTAP distribution and rewrote it to use
         App::Prove and pgTAP.
+      - Rewrote `pg_prove` to use App::Prove, thus gaining most of its
+        features.
         

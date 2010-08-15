@@ -84,7 +84,7 @@ exit $app->run ? 0 : 1;
 
 
 PGPROVE: {
-    package
+    package # Hide from indexer.
         App::Prove::pgTAP;
     use base 'App::Prove';
     sub _get_tests {
@@ -97,6 +97,8 @@ PGPROVE: {
 }
 
 __END__
+
+=encoding utf8
 
 =head1 Name
 
