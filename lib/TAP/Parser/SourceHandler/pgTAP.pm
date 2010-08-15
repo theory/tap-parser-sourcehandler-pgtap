@@ -385,7 +385,7 @@ L<email|mailto:bug-tap-parser-sourcehandler-pgtap@rt.cpan.org> a report!
 
 David E. Wheeler <dwheeler@cpan.org>
 
-=head1 Copyright and Licence
+=head1 Copyright and License
 
 Copyright (c) 2010 David E. Wheeler. Some Rights Reserved.
 

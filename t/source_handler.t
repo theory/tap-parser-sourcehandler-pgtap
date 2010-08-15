@@ -1,9 +1,5 @@
 #!/usr/bin/perl -w
 
-BEGIN {
-    unshift @INC, 't/lib';
-}
-
 use strict;
 
 use Test::More tests => 48;
@@ -131,14 +127,14 @@ sub test_handler {
 
     {
         my $default_vote = $tests->{default_vote} || 0;
-        my $source = TAP::Parser::Source->new;
+        my $source = TAP::Parser::Source->new->raw(\'');
         is( $class->can_handle($source), $default_vote,
             '... can_handle default vote'
         );
     }
 
     for my $test ( @{ $tests->{can_handle} } ) {
-        my $source = TAP::Parser::Source->new;
+        my $source = TAP::Parser::Source->new->raw(\'');
         $source->raw( $test->{raw} )       if $test->{raw};
         $source->meta( $test->{meta} )     if $test->{meta};
         $source->config( $test->{config} ) if $test->{config};

@@ -315,7 +315,7 @@ to run something like:
 
   psql --command 'SELECT * FROM runtests()'
 
-You should use this option when you’ve written your tests in xUnit style,
+You should use this option when you've written your tests in xUnit style,
 where they’re all defined in test functions already loaded in the database.
 
 =item C<-s>
@@ -475,8 +475,8 @@ problems have been introduced.
 
 =item C<all>
 
-Run all tests in normal order. Multple options may be specified, so to run all
-tests with the failures from last time first:
+Run all tests in normal order. Multiple options may be specified, so to run
+all tests with the failures from last time first:
 
     pg_prove --state failed,all,save
 
@@ -619,7 +619,7 @@ Dry run. Just outputs a list of the tests that would have been run.
 =item C<--merge>
 
 Merge test scripts' C<STDERR> with their C<STDOUT>. Not really relevant to
-pgTAP tests, which only print to STDERR when an exception is thrown.
+pgTAP tests, which only print to C<STDERR> when an exception is thrown.
 
 =item C<-t>
 
@@ -678,7 +678,7 @@ them in reverse order. Not relevant when used with C<--runtests>.
 
 The name of the class to use to format output. The default is
 L<TAP::Formatter::Console|TAP::Formatter::Console>, or
-L<TAP::Formatter::File|TAP::Formatter::File> if the output isn’t a TTY.
+L<TAP::Formatter::File|TAP::Formatter::File> if the output isn't a TTY.
 
 =item C<--count>
 
@@ -692,7 +692,7 @@ Show the X/Y test count as tests run when not verbose (default).
 
 Disable the display of the X/Y test count as tests run.
 
-Send the TAP output to a TAP archive file as wel as to the normal output
+Send the TAP output to a TAP archive file as well as to the normal output
 destination. The archive formats supported are F<.tar> and F<.tar.gz>.
 
 =back
