@@ -1,6 +1,11 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
 3.23
+      - Disable --failures by default.
+      - Enable --comments by default. This is so that failure diagnostics will
+        appear even when not in verbose mode. This is how the `pg_prove`
+        distributed with pgTAP works. Use --no-comments or --quiet to disable
+        them.
 
 3.22  2010-08-15T01:06:08
       - Moved from the Test::Harness distribution to its own distribution.

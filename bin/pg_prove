@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl -w
 
 use strict;
 use App::Prove;
@@ -9,7 +9,7 @@ $|++;
 
 Getopt::Long::Configure(qw(no_ignore_case bundling pass_through));
 
-my $opts = { color => 1, failures => 1 };
+my $opts = { color => 1, comments => 1 };
 
 Getopt::Long::GetOptions(
     'psql-bin|b=s' => \$opts->{psql},
@@ -23,7 +23,7 @@ Getopt::Long::GetOptions(
     'match|x=s'    => \$opts->{match},
     'version|V'    => \$opts->{version},
     'ext=s@'       => \$opts->{ext},
-    'failures|f'   => \$opts->{failures},
+    'comments|o!'  => \$opts->{comments},
     'help|H|?'     => \$opts->{help},
     'man|m'        => \$opts->{man},
 ) or require Pod::Usage && Pod::Usage::pod2usage(2);
@@ -68,8 +68,8 @@ my $app = $prove_class->new;
 $app->process_args(
     @ARGV,
     (map { ('--ext' => $_) } @{ $opts->{ext} || ['.pg'] }),
-    qw(--source pgTAP --failures),
-    ($opts->{failures} ? ('--failures') : ()),
+    qw(--source pgTAP),
+    ($opts->{comments} ? ('--comments') : ()),
     (map {
         ('--pgtap-option' => "$_=$opts->{$_}")
     } grep {
@@ -561,13 +561,14 @@ true value.
   pg_prove --failures
   pg_prove -f
 
-Show failed tests. Enabled by default.
+Show failed tests.
 
 =item C<-o>
 
 =item C<--comments>
 
-Show comments, such as diagnostics output by C<diag()>.
+Show comments, such as diagnostics output by C<diag()>. Enabled by default.
+use C<--no-comments> to disable.
 
 =item C<--directives>
 
