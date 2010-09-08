@@ -1,4 +1,4 @@
-TAP/Parser/SourceHandler/pgTAP version 3.23
+TAP/Parser/SourceHandler/pgTAP version 3.24
 ===========================================
 
 This module adds support for executing [pgTAP](http://pgtap.org/) PostgreSQL
