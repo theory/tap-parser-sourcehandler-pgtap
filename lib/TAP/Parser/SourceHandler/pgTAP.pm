@@ -378,7 +378,8 @@ free to fork and contribute, or to clone
 C<git://github.com/theory/tap-parser-sourcehandler-pgtap.git> and send
 patches!
 
-Found a bug? Please L<post|http://github.com/theory/pod-site/issues> or
+Found a bug? Please
+L<post|http://github.com/theory/tap-parser-sourcehandler-pgtap/issues> or
 L<email|mailto:bug-tap-parser-sourcehandler-pgtap@rt.cpan.org> a report!
 
 =head1 Author
