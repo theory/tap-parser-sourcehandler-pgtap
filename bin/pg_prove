@@ -18,6 +18,7 @@ Getopt::Long::GetOptions(
     'host|h=s'     => \$opts->{host},
     'port|p=s'     => \$opts->{port},
     'pset|P=s%'    => \$opts->{pset},
+    'set|S=s%'     => \$opts->{set},
     'runtests|R'   => \$opts->{runtests},
     'schema|s=s'   => \$opts->{schema},
     'match|x=s'    => \$opts->{match},
@@ -77,7 +78,10 @@ $app->process_args(
     } qw(psql dbname username host port)),
     (map {
         ('--pgtap-option' => "pset=$_=$opts->{pset}{$_}")
-    } keys %{ $opts->{pset} })
+    } keys %{ $opts->{pset} }),
+    (map {
+        ('--pgtap-option' => "set=$_=$opts->{set}{$_}")
+    } keys %{ $opts->{set} })
 );
 
 exit $app->run ? 0 : 1;
@@ -192,6 +196,7 @@ schema and I<ending> with “test,” run the tests like so:
  -h,  --host HOST            Host to which to connect.
  -p,  --port PORT            Port to which to connect.
  -P,  --pset OPTION=VALUE    Set psql key/value printing option.
+ -S,  --set VAR=VALUE        Set variables for psql session.
  -R   --runtests             Run xUnit test using C<runtests()>.
  -s,  --schema SCHEMA        Schema in which to find xUnit tests.
  -x,  --match REGEX          Regular expression to find xUnit tests.
@@ -300,6 +305,17 @@ compile time, usually 5432.
   pg_prove -P null=[NULL]
 
 Specifies printing options in the style of C<\pset> in the C<psql> program.
+See L<http://www.postgresql.org/docs/current/static/app-psql.html> for details
+on the supported options.
+
+=item C<-S>
+
+=item C<--set>
+
+  pg_prove --set MY_CONTRACT=321
+  pg_prove -S TEST_SEARCH_PATH=test,public
+
+Sets local variables for psql in the style of C<\set> in the C<psql> program.
 See L<http://www.postgresql.org/docs/current/static/app-psql.html> for details
 on the supported options.
 
