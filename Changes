@@ -1,5 +1,7 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
+3.25
+
 3.24  2011-01-13T22:26:47
      - Added -S/--set option to pg_prove to allow the setting of psql
        variables. Patch by Norman Yamada.
