@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 48;
+use Test::More tests => 50;
 
 use IO::File;
 use IO::Handle;
@@ -88,12 +88,13 @@ $dir    = catdir curdir, 't', 'bin' unless -d $dir;
                         host     => 'f',
                         port     => 2,
                         dbname   => 'fred',
+                        set      => { whatever => 'foo' },
                     }
                 },
                 iclass => 'TAP::Parser::Iterator::Process',
                 output => [
                     @command,
-                    qw(--username who --host f --port 2 --dbname fred --file),
+                    qw(--username who --host f --port 2 --dbname fred --set whatever=foo --file),
                     $test
                 ],
             },
