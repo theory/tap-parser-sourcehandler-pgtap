@@ -1,5 +1,5 @@
-#!/usr/bin/env perl
-use warnings;
+#!/usr/bin/perl -w
+
 use strict;
 use App::Prove;
 use Getopt::Long;
