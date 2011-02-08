@@ -9,7 +9,7 @@ use TAP::Parser::Iterator::Process ();
 @ISA = qw(TAP::Parser::SourceHandler);
 TAP::Parser::IteratorFactory->register_handler(__PACKAGE__);
 
-our $VERSION = '3.25';
+our $VERSION = '3.26';
 
 =head1 Name
 
