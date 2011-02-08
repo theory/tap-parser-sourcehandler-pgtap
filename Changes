@@ -1,6 +1,10 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
 3.25
+     - Fixed shebang line in `pg_prove` so that it will be properly rewritten
+       upon installation.
+     - The `-S/--set` option added in 3.24 is now properly passed to `psql`.
+       Norman Yamada.
 
 3.24  2011-01-13T22:26:47
      - Added -S/--set option to pg_prove to allow the setting of psql
