@@ -322,6 +322,12 @@ sub make_iterator {
         }
     }
 
+    if (my $set = $config->{set}) {
+        while (my ($k, $v) = each %{ $set }) {
+            push @command, '--set', "$k=$v";
+        }
+    }
+
     my $fn = ref $source->raw ? ${ $source->raw } : $source->raw;
 
     if ($fn && $fn =~ s/^pgsql:\s*//) {
