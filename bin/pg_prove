@@ -84,8 +84,7 @@ $app->process_args(
     } keys %{ $opts->{set} })
 );
 
-exit $app->run ? 0 : 1;
-
+exit($app->run ? 0 : 1);
 
 PGPROVE: {
     package # Hide from indexer.

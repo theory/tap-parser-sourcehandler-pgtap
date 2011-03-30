@@ -1,6 +1,8 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
 3.26
+     - Fixed exit code in `pg_prove`. It no longer returns 0 on fail and 1 on
+       pass. Thanks to Rod Taylor for the report!
 
 3.25 2011-02-08T17:42:21
      - Fixed shebang line in `pg_prove` so that it will be properly rewritten
