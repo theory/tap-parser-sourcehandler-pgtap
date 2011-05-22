@@ -55,7 +55,7 @@ if ($opts->{runtests} || $opts->{schema} || $opts->{match}) {
     # We're just going to call `runtests()`.
     $prove_class .= '::pgTAP';
     my @args;
-    for my $key qw(schema match) {
+    for my $key (qw(schema match)) {
         next unless $opts->{$key};
         (my $arg = $opts->{$key}) =~ s/'/\\'/g;
         # Gotta cast the arguments.
