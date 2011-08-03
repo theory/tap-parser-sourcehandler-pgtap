@@ -283,10 +283,10 @@ Outputs the program name and version and exits.
 
 =head1 Author
 
-David E. Wheeler <david@kineticode.com>
+David E. Wheeler <dwheeler@cpan.org>
 
 =head1 Copyright
 
-Copyright (c) 2009-2010 Kineticode, Inc. Some Rights Reserved.
+Copyright (c) 2009-2011 David E. Wheeler. Some Rights Reserved.
 
 =cut

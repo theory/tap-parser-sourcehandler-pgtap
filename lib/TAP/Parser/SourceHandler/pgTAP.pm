@@ -394,7 +394,7 @@ David E. Wheeler <dwheeler@cpan.org>
 
 =head1 Copyright and License
 
-Copyright (c) 2010 David E. Wheeler. Some Rights Reserved.
+Copyright (c) 2010-2011 David E. Wheeler. Some Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

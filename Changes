@@ -2,6 +2,8 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
 3.27
      - Eliminated "Use of qw(...) as parentheses is deprecated" on Perl 5.14.
+     - Updated copyright dates.
+     - Updated email address in `pg_tapgen`.
 
 3.26 2011-03-30T18:22:25
      - Fixed exit code in `pg_prove`. It no longer returns 0 on fail and 1 on
