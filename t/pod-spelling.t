@@ -19,3 +19,10 @@ TODO
 todos
 xUnit
 pgsql
+PostgreSQL
+Metadata
+SQL
+CPAN
+Kineticode
+schemas
+GitHub
