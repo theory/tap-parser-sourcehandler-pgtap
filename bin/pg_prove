@@ -49,6 +49,7 @@ if ($opts->{version}) {
 }
 
 my $prove_class = 'App::Prove';
+my $runtests_call;
 
 # --schema and --match assume --runtests.
 if ($opts->{runtests} || $opts->{schema} || $opts->{match}) {
@@ -62,7 +63,7 @@ if ($opts->{runtests} || $opts->{schema} || $opts->{match}) {
         push @args, "'$arg'::" . ($key eq 'schema' ? 'name' : 'text');
     }
 
-    push @ARGV, 'runtests(' . join( ', ', @args ) . ');'
+    $runtests_call = 'runtests(' . join( ', ', @args ) . ');'
 }
 
 my $app = $prove_class->new;
@@ -91,10 +92,9 @@ PGPROVE: {
         App::Prove::pgTAP;
     use base 'App::Prove';
     sub _get_tests {
-        my $name = shift->argv->[-1];
         return [
-            "pgsql: SELECT * FROM $name",
-            $name,
+            "pgsql: SELECT * FROM $runtests_call",
+            $runtests_call,
         ]
     }
 }
