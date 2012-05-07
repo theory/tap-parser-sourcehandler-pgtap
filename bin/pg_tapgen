@@ -44,14 +44,18 @@ sub script(&;$) {
     my ($code, $fn) = @_;
     my $file = File::Spec->catfile($opts->{directory}, $fn);
     open my $fh, '>:encoding(UTF-8)', $file or die "Cannot open $file: $!\n";
+    my $orig = select;
     select $fh;
-    print "CREATE EXTENSION IF NOT EXISTS pgtap;\n",
-          "SET client_encoding = 'UTF-8';\n",
-          "BEGIN\n",
+    print "SET client_encoding = 'UTF-8';\n",
+          "SET client_min_messages = warning;\n",
+          "CREATE EXTENSION IF NOT EXISTS pgtap;\n",
+          "RESET client_min_messages;\n",
+          "BEGIN;\n",
           "SELECT * FROM no_plan();\n\n";
     $code->();
     print "SELECT * FROM finish();\n";
     close $fh or die "Error closing $file: $!\n";
+    select $orig;
 }
 
 my @conn;
@@ -103,9 +107,9 @@ sub get_schemas {
 
 sub schemas_are {
     my $schemas = shift;
-    print "SELECT schemas_are( ARRAY[\n    '",
+    print "SELECT schemas_are(ARRAY[\n    '",
         join("',\n    '", @$schemas),
-        "'\n] );\n\n" if @$schemas;
+        "'\n]);\n\n" if @$schemas;
 }
 
 sub get_rels {
@@ -123,28 +127,32 @@ sub get_rels {
 sub tables_are {
     my $schema = shift;
     my $tables = get_rels(r => $schema);
-    return unless $tables && @$tables;
-    print "SELECT tables_are( '$schema', ARRAY[\n    '",
+    return unless $tables && @{ $tables };
+    print "SELECT tables_are('$schema', ARRAY[\n    '",
         join("',\n    '", @$tables),
-        "'\n] );\n\n";
+        "'\n]);\n\n";
+
+    for my $table (@{ $tables }) {
+        script { has_table($schema, $table) } "table_$schema.$table.sql";
+    }
 }
 
 sub views_are {
     my $schema = shift;
     my $tables = get_rels(v => $schema);
     return unless $tables && @$tables;
-    print "SELECT views_are( '$schema', ARRAY[\n    '",
+    print "SELECT views_are('$schema', ARRAY[\n    '",
         join("',\n    '", @$tables),
-        "'\n] );\n\n";
+        "'\n]);\n\n";
 }
 
 sub sequences_are {
     my $schema = shift;
     my $tables = get_rels(S => $schema);
     return unless $tables && @$tables;
-    print "SELECT sequences_are( '$schema', ARRAY[\n    '",
+    print "SELECT sequences_are('$schema', ARRAY[\n    '",
         join("',\n    '", @$tables),
-        "'\n] );\n\n";
+        "'\n]);\n\n";
 }
 
 sub functions_are {
@@ -157,9 +165,34 @@ sub functions_are {
     });
     my $funcs = $dbh->selectcol_arrayref($sth, undef, $schema);
     return unless $funcs && @$funcs;
-    print "SELECT functions_are( '$schema', ARRAY[\n    '",
+    print "SELECT functions_are('$schema', ARRAY[\n    '",
         join("',\n    '", @$funcs),
-        "'\n] );\n\n";
+        "'\n]);\n\n";
+}
+
+sub has_table {
+    my ($schema, $table) = @_;
+    print "SELECT has_table('$schema', '$table', 'Should have table $schema.$table');\n\n";
+    columns_are($schema, $table);
+}
+sub columns_are {
+    my ($schema, $table) = @_;
+    my $cols = $dbh->selectcol_arrayref(q{
+        SELECT a.attname
+          FROM pg_catalog.pg_namespace n
+          JOIN pg_catalog.pg_class c ON n.oid = c.relnamespace
+          JOIN pg_catalog.pg_attribute a ON c.oid = a.attrelid
+         WHERE n.nspname = ?
+           AND c.relname = ?
+           AND a.attnum > 0
+           AND NOT a.attisdropped
+         ORDER BY a.attnum
+    }, undef, $schema, $table);
+
+    return unless $cols && @{ $cols };
+    print "SELECT columns_are('$schema', '$table', ARRAY[\n    '",
+        join("',\n    '", @{ $cols }),
+        "'\n]);\n\n";
 }
 
 __END__
