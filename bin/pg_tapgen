@@ -49,7 +49,7 @@ sub script(&;$) {
     print "SET client_encoding = 'UTF-8';\n",
           "SET client_min_messages = warning;\n",
           "CREATE EXTENSION IF NOT EXISTS pgtap;\n",
-          "RESET client_min_messages;\n",
+          "RESET client_min_messages;\n\n",
           "BEGIN;\n",
           "SELECT * FROM no_plan();\n\n";
     $code->();
@@ -172,16 +172,21 @@ sub functions_are {
 
 sub has_table {
     my ($schema, $table) = @_;
-    print "SELECT has_table('$schema', '$table', 'Should have table $schema.$table');\n";
+    print "SELECT has_table(
+    '$schema', '$table',
+    'Should have table $schema.$table'
+);\n\n";
     has_pk($schema, $table);
-    print $/;
     columns_are($schema, $table);
 }
 
 sub has_pk {
     my ($schema, $table) = @_;
     my $fn = _hasc($schema, $table, 'p') ? 'has_pk' : 'hasnt_pk';
-    print "select $fn('$schema', '$table', 'Table $schema.$table should have a primary key');\n";
+    print "select $fn(
+    '$schema', '$table',
+    'Table $schema.$table should have a primary key'
+);\n\n";
 }
 
 sub columns_are {
