@@ -172,9 +172,18 @@ sub functions_are {
 
 sub has_table {
     my ($schema, $table) = @_;
-    print "SELECT has_table('$schema', '$table', 'Should have table $schema.$table');\n\n";
+    print "SELECT has_table('$schema', '$table', 'Should have table $schema.$table');\n";
+    has_pk($schema, $table);
+    print $/;
     columns_are($schema, $table);
 }
+
+sub has_pk {
+    my ($schema, $table) = @_;
+    my $fn = _hasc($schema, $table, 'p') ? 'has_pk' : 'hasnt_pk';
+    print "select $fn('$schema', '$table', 'Table $schema.$table should have a primary key');\n";
+}
+
 sub columns_are {
     my ($schema, $table) = @_;
     my $cols = $dbh->selectcol_arrayref(q{
@@ -193,6 +202,22 @@ sub columns_are {
     print "SELECT columns_are('$schema', '$table', ARRAY[\n    '",
         join("',\n    '", @{ $cols }),
         "'\n]);\n\n";
+}
+
+sub _hasc {
+    my $sth = $dbh->prepare_cached(q{
+        SELECT EXISTS(
+            SELECT true
+              FROM pg_catalog.pg_namespace n
+              JOIN pg_catalog.pg_class c      ON c.relnamespace = n.oid
+              JOIN pg_catalog.pg_constraint x ON c.oid = x.conrelid
+             WHERE c.relhaspkey = true
+               AND n.nspname = ?
+               AND c.relname = ?
+               AND x.contype = ?
+        )
+    });
+    return $dbh->selectcol_arrayref($sth, undef, @_)->[0];
 }
 
 __END__
