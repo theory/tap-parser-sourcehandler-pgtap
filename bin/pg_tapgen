@@ -5,11 +5,12 @@ use warnings;
 use DBI;
 use DBD::Pg;
 use Getopt::Long;
+use File::Spec;
 our $VERSION = '3.28';
 
 Getopt::Long::Configure (qw(bundling));
 
-my $opts = { psql => 'psql', color => 1 };
+my $opts = { psql => 'psql', directory => '.' };
 
 Getopt::Long::GetOptions(
     'dbname|d=s'          => \$opts->{dbname},
@@ -17,6 +18,7 @@ Getopt::Long::GetOptions(
     'host|h=s'            => \$opts->{host},
     'port|p=s'            => \$opts->{port},
     'exclude-schema|N=s@' => \$opts->{exclude_schema},
+    'directory|dir=s'     => \$opts->{directory},
     'verbose|v+'          => \$opts->{verbose},
     'help|H'              => \$opts->{help},
     'man|m'               => \$opts->{man},
@@ -37,6 +39,21 @@ if ($opts->{version}) {
     exit;
 }
 
+# Function to write a test script.
+sub script(&;$) {
+    my ($code, $fn) = @_;
+    my $file = File::Spec->catfile($opts->{directory}, $fn);
+    open my $fh, '>:encoding(UTF-8)', $file or die "Cannot open $file: $!\n";
+    select $fh;
+    print "CREATE EXTENSION IF NOT EXISTS pgtap;\n",
+          "SET client_encoding = 'UTF-8';\n",
+          "BEGIN\n",
+          "SELECT * FROM no_plan();\n\n";
+    $code->();
+    print "SELECT * FROM finish();\n";
+    close $fh or die "Error closing $file: $!\n";
+}
+
 my @conn;
 for (qw(host port dbname)) {
     push @conn, "$_=$opts->{$_}" if defined $opts->{$_};
@@ -45,23 +62,26 @@ my $dsn = 'dbi:Pg';
 $dsn .= ':' . join ';', @conn if @conn;
 
 my $dbh = DBI->connect($dsn, $opts->{username}, undef, {
-    RaiseError => 1,
-    PrintError => 0,
-    AutoCommit => 1,
+    RaiseError     => 1,
+    PrintError     => 0,
+    AutoCommit     => 1,
+    pg_enable_utf8 => 1,
 });
+$dbh->do(q{SET client_encoding = 'UTF-8'});
 
-print "SELECT * FROM no_plan();\n\n";
-if (my @schemas = get_schemas($opts->{exclude_schema})) {
-    schemas_are(\@schemas);
-    for my $schema (@schemas) {
-        tables_are($schema);
-        views_are($schema);
-        sequences_are($schema);
-        functions_are($schema);
+##############################################################################
+
+script {
+    if (my @schemas = get_schemas($opts->{exclude_schema})) {
+        schemas_are(\@schemas);
+        for my $schema (@schemas) {
+            tables_are($schema);
+            views_are($schema);
+            sequences_are($schema);
+            functions_are($schema);
+        }
     }
-}
-
-print "SELECT * FROM finish();\n";
+} 'schema.sql';
 
 ##############################################################################
 
