@@ -1,6 +1,6 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
-3.28
+3.28  2012-05-07T22:01:02Z
      - Simplified handling of `--runtests` in `pg_prove` to be a bit less
        fragile. Based on a report from Giorgio Valoti.
      - Added a bunch of table-testing functionality to `pg_tapgen`. It now
