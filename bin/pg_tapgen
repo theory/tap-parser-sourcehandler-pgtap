@@ -276,6 +276,7 @@ distribution in the future.
   -p --port PORT            Port to which to connect.
   -v --verbose              Display output of test scripts while running them.
   -N --exclude-schema       Exclude a schema from the generated tests.
+     --directory DIRECTORY  Directory to which to write the test files.
   -H --help                 Print a usage statement and exit.
   -m --man                  Print the complete documentation and exit.
   -V --version              Print the version number and exit.
@@ -328,6 +329,12 @@ Specifies the TCP port or the local Unix-domain socket file extension on which
 the server is listening for connections. Defaults to the value of the
 C<$PGPORT> environment variable or, if not set, to the port specified at
 compile time, usually 5432.
+
+=item C<--dir>
+
+=item C<--directory>
+
+Directory to which to write test files. Defaults to the current directory.
 
 =item C<-v>
 
@@ -389,6 +396,6 @@ David E. Wheeler <dwheeler@cpan.org>
 
 =head1 Copyright
 
-Copyright (c) 2009-2011 David E. Wheeler. Some Rights Reserved.
+Copyright (c) 2009-2012 David E. Wheeler. Some Rights Reserved.
 
 =cut

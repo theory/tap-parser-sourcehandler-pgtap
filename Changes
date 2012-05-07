@@ -3,6 +3,8 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 3.28
      - Simplified handling of `--runtests` in `pg_prove` to be a bit less
        fragile. Based on a report from Giorgio Valoti.
+     - Added a bunch of table-testing functionality to `pg_tapgen`. It now
+       writes files for each table to a specified `--directory`.
 
 3.27  2011-08-03T18:41:29
      - Eliminated "Use of qw(...) as parentheses is deprecated" on Perl 5.14.
