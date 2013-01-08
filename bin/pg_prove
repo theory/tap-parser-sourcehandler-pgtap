@@ -22,6 +22,7 @@ Getopt::Long::GetOptions(
     'runtests|R'   => \$opts->{runtests},
     'schema|s=s'   => \$opts->{schema},
     'match|x=s'    => \$opts->{match},
+    'timer|t!'	   => \$opts->{timer},
     'version|V'    => \$opts->{version},
     'ext=s@'       => \$opts->{ext},
     'comments|o!'  => \$opts->{comments},
@@ -72,6 +73,7 @@ $app->process_args(
     (map { ('--ext' => $_) } @{ $opts->{ext} || ['.pg'] }),
     qw(--source pgTAP),
     ($opts->{comments} ? ('--comments') : ()),
+    ($opts->{timer} ? ('--timer') : ()),
     (map {
         ('--pgtap-option' => "$_=$opts->{$_}")
     } grep {
