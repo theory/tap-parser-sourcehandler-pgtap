@@ -22,6 +22,7 @@ Getopt::Long::GetOptions(
     'runtests|R'   => \$opts->{runtests},
     'schema|s=s'   => \$opts->{schema},
     'match|x=s'    => \$opts->{match},
+    'timer|t!'     => \$opts->{timer},
     'version|V'    => \$opts->{version},
     'ext=s@'       => \$opts->{ext},
     'comments|o!'  => \$opts->{comments},
@@ -72,6 +73,7 @@ $app->process_args(
     (map { ('--ext' => $_) } @{ $opts->{ext} || ['.pg'] }),
     qw(--source pgTAP),
     ($opts->{comments} ? ('--comments') : ()),
+    ($opts->{timer} ? ('--timer') : ()),
     (map {
         ('--pgtap-option' => "$_=$opts->{$_}")
     } grep {
@@ -220,7 +222,7 @@ schema and I<ending> with “test,” run the tests like so:
       --normalize            Normalize TAP output in verbose output
  -D   --dry                  Dry run. Show test that would have run.
       --merge                Merge test scripts' C<STDERR> and C<STDOUT>.
-      --timer                Print elapsed time after each test.
+ -t   --timer                Print elapsed time after each test.
  -c,  --color                Colored test output (default).
       --nocolor              Do not color test output.
       --shuffle              Run the tests in random order.
@@ -645,8 +647,6 @@ pgTAP tests, which only print to C<STDERR> when an exception is thrown.
   pg_prove -t
 
 Print elapsed time after each test file.
-
-=item C<-t>
 
 =item C<--color>
 
