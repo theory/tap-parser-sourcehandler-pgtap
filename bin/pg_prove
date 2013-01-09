@@ -648,6 +648,8 @@ pgTAP tests, which only print to C<STDERR> when an exception is thrown.
 
 Print elapsed time after each test file.
 
+=item C<-c>
+
 =item C<--color>
 
   pg_prove --color

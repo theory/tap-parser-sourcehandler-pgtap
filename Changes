@@ -1,7 +1,10 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
 3.29
-     - Added the `--timer` option, thanks to Norman Yamada.
+     - Restored the `-t` alias for the the `--timer` option, thanks to Norman
+       Yamada.
+     - Fixed the documentation for the alias of `--color`, which is `-c`, not
+       `-t`.
 
 3.28  2012-05-07T22:01:02Z
      - Simplified handling of `--runtests` in `pg_prove` to be a bit less
