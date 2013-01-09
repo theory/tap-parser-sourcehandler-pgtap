@@ -1,6 +1,6 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
-3.29
+3.29  2013-01-09T00:15:34Z
      - Restored the `-t` alias for the the `--timer` option, thanks to Norman
        Yamada.
      - Fixed the documentation for the alias of `--color`, which is `-c`, not
