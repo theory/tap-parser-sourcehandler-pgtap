@@ -3,6 +3,8 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 3.30
      - Removed markup from preformatted text in the `pg_prove` documentation.
      - Updated copyright dates.
+     - Added note to the docs mentioning that `pg_prove`-specific options are
+       not supported in `.proverc`, unfortunately.
 
 3.29  2013-01-09T00:15:34Z
      - Restored the `-t` alias for the the `--timer` option, thanks to Norman

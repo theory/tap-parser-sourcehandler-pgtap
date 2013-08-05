@@ -433,7 +433,7 @@ Run N test jobs in parallel (try 9.)
 Process options from the specified configuration file.
 
 If C<--rc> is not specified and F<./.proverc> or F<~/.proverc> exist, they
-will be read and any options they contain processed before the command line
+will be read and the options they contain processed before the command line
 options. Options in configuration files are specified in the same way as
 command line options:
 
@@ -444,10 +444,10 @@ command line options:
 Under Windows and VMS the option file is named F<_proverc> rather than
 F<.proverc> and is sought only in the current directory.
 
-Due to how options are loaded you cannot use F<.proverc> for pg_prove options,
-only App::Prove options.  However pg_prove does support all of the usual libpq
-L<Environment
-Variables|http://www.postgresql.org/docs/current/static/libpq-envars.html>.
+Due to how options are loaded you cannot use F<.proverc> for
+C<pg_prove>-specific options, only C<prove> options. However, <pg_prove> does
+support all of the usual libpq
+L<Environment Variables|http://www.postgresql.org/docs/current/static/libpq-envars.html>.
 
 =item C<--norc>
 
