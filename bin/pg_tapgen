@@ -6,7 +6,7 @@ use DBI;
 use DBD::Pg;
 use Getopt::Long;
 use File::Spec;
-our $VERSION = '3.30';
+our $VERSION = '3.31';
 
 Getopt::Long::Configure (qw(bundling));
 
