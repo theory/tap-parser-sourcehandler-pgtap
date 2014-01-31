@@ -26,3 +26,4 @@ CPAN
 Kineticode
 schemas
 GitHub
+libpq
