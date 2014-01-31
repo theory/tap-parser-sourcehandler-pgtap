@@ -29,5 +29,5 @@
 # Avoid build files.
 ^TAP-Parser-SourceHandler
 
-# Avoid spelling test.
-pod-spelling.t$
+# Avoid Pod tests.
+t/pod[^.]*\.t
