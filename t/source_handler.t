@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 50;
+use Test::More tests => 46;
 
 use IO::File;
 use IO::Handle;
@@ -27,7 +27,6 @@ $dir    = catdir curdir, 't', 'bin' unless -d $dir;
       --quiet
       --pset pager=
       --pset tuples_only=true
-      --set ON_ERROR_ROLLBACK=1
       --set ON_ERROR_STOP=1
     );
     my $tests = {

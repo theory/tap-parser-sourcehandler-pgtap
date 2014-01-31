@@ -308,7 +308,6 @@ sub make_iterator {
       --quiet
       --pset pager=
       --pset tuples_only=true
-      --set ON_ERROR_ROLLBACK=1
       --set ON_ERROR_STOP=1
     );
 

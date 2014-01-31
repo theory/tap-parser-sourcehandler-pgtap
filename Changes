@@ -5,6 +5,8 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
      - Updated copyright dates.
      - Added note to the docs mentioning that `pg_prove`-specific options are
        not supported in `.proverc`, unfortunately.
+     - Removed `ON_ERROR_ROLLBACK=1`, as it does not work well with scripts,
+       anyway.
 
 3.29  2013-01-09T00:15:34Z
      - Restored the `-t` alias for the the `--timer` option, thanks to Norman
