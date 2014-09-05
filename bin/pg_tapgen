@@ -13,6 +13,7 @@ use Env qw(PGPASSWORD);
 Getopt::Long::Configure (qw(bundling));
 
 my $opts = { psql => 'psql', directory => '.' };
+my $total_tests = 0;
 
 Getopt::Long::GetOptions(
     'dbname|d=s'          => \$opts->{dbname},
@@ -48,14 +49,16 @@ sub script(&;$) {
     open my $fh, '>:encoding(UTF-8)', $file or die "Cannot open $file: $!\n";
     my $orig = select;
     select $fh;
+    $total_tests = 0;
     print "SET client_encoding = 'UTF-8';\n",
           "SET client_min_messages = warning;\n",
-          "CREATE EXTENSION IF NOT EXISTS pgtap;\n",
+          "-- CREATE EXTENSION IF NOT EXISTS pgtap;\n",
           "RESET client_min_messages;\n\n",
           "BEGIN;\n",
           "SELECT * FROM no_plan();\n\n";
     $code->();
     print "SELECT * FROM finish();\nROLLBACK;\n";
+    print "-- Total tests $total_tests\n";
     close $fh or die "Error closing $file: $!\n";
     select $orig;
 }
@@ -109,9 +112,11 @@ sub get_schemas {
 
 sub schemas_are {
     my $schemas = shift;
+    return unless @$schemas;
     print "SELECT schemas_are(ARRAY[\n    '",
         join("',\n    '", @$schemas),
-        "'\n]);\n\n" if @$schemas;
+        "'\n]);\n\n"; 
+    $total_tests++;
 }
 
 sub get_rels {
@@ -133,6 +138,7 @@ sub tables_are {
     print "SELECT tables_are('$schema', ARRAY[\n    '",
         join("',\n    '", @$tables),
         "'\n]);\n\n";
+    $total_tests++;
 
     for my $table (@{ $tables }) {
         script { has_table($schema, $table) } "table_$schema.$table.sql";
@@ -146,6 +152,7 @@ sub views_are {
     print "SELECT views_are('$schema', ARRAY[\n    '",
         join("',\n    '", @$tables),
         "'\n]);\n\n";
+    $total_tests++;
 }
 
 sub sequences_are {
@@ -155,6 +162,7 @@ sub sequences_are {
     print "SELECT sequences_are('$schema', ARRAY[\n    '",
         join("',\n    '", @$tables),
         "'\n]);\n\n";
+    $total_tests++;
 }
 
 sub functions_are {
@@ -170,6 +178,7 @@ sub functions_are {
     print "SELECT functions_are('$schema', ARRAY[\n    '",
         join("',\n    '", @$funcs),
         "'\n]);\n\n";
+    $total_tests++;
 }
 
 sub has_table {
@@ -178,6 +187,7 @@ sub has_table {
     '$schema', '$table',
     'Should have table $schema.$table'
 );\n\n";
+    $total_tests++;
     has_pk($schema, $table);
     columns_are($schema, $table);
 }
@@ -185,15 +195,16 @@ sub has_table {
 sub has_pk {
     my ($schema, $table) = @_;
     my $fn = _hasc($schema, $table, 'p') ? 'has_pk' : 'hasnt_pk';
-    print "select $fn(
+    print "SELECT $fn(
     '$schema', '$table',
     'Table $schema.$table should have a primary key'
 );\n\n";
+    $total_tests++;
 }
 
 sub columns_are {
     my ($schema, $table) = @_;
-    print "SET search_path = '$schema';\n";
+    # print "SET search_path = '$schema';\n";
     my $cols = $dbh->selectall_arrayref(q{
         SELECT a.attname AS name
              , pg_catalog.format_type(a.atttypid, a.atttypmod) AS type
@@ -212,19 +223,26 @@ sub columns_are {
     }, undef, $schema, $table);
 
     return unless $cols && @{ $cols };
-    print "SELECT columns_are('$schema', '$table', ARRAY[\n    '",
-        join("',\n    '", map { $_->[0] } @{ $cols }),
-        "'\n]);\n\n";
+    print "SELECT columns_are('$schema'::name, '$table'::name, ARRAY[\n    '",
+        join("'::name,\n    '", map { $_->[0] } @{ $cols }),
+        "'::name\n]);\n\n";
 
+    $total_tests++;
     for my $col (@{ $cols }) {
-        my $null_fn = $col->[2] ? 'col_not_null(' : 'col_is_null( ';
-        my $def_fn = $col->[3] ? 'col_has_default(  ' : 'col_hasnt_default(';
-        print "SELECT has_column(       '$table', '$col->[0]');\n",
-              "SELECT col_type_is(      '$table', '$col->[0]', '$col->[1]');\n",
-              "SELECT $null_fn     '$table', '$col->[0]');\n",
-              "SELECT $def_fn'$table', '$col->[0]');\n";
-        print "SELECT col_default_is(   '$table', '$col->[0]', '$col->[4]');\n"
+        my $null_fn = $col->[2] ? 'col_not_null' : ' col_is_null';
+        my $def_fn = $col->[3] ? '  col_has_default' : 'col_hasnt_default';
+        #     #SELECT col_hasnt_default(
+        #     #SELECT   col_has_default(
+        #     #SELECT col_not_null(     
+        #     #SELECT  col_is_null(
+        print "SELECT has_column(       '$schema', '$table', '$col->[0]','pgtapgen');\n",
+              "SELECT col_type_is(      '$schema', '$table', '$col->[0]', '$col->[1]','pgtapgen');\n",
+              "SELECT $null_fn(     '$schema', '$table', '$col->[0]', 'pgtapgen');\n",
+              "SELECT $def_fn('$schema', '$table', '$col->[0]', 'pgtapgen');\n";
+        $total_tests = $total_tests + 4;
+        print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', '$col->[4]','pgtapgen');\n"
             if $col->[3];
+        $total_tests++ if $col->[3];
         print $/;
     }
 
