@@ -8,6 +8,8 @@ use Getopt::Long;
 use File::Spec;
 our $VERSION = '3.31';
 
+use Env qw(PGPASSWORD);
+
 Getopt::Long::Configure (qw(bundling));
 
 my $opts = { psql => 'psql', directory => '.' };
@@ -65,7 +67,7 @@ for (qw(host port dbname)) {
 my $dsn = 'dbi:Pg';
 $dsn .= ':' . join ';', @conn if @conn;
 
-my $dbh = DBI->connect($dsn, $opts->{username}, undef, {
+my $dbh = DBI->connect($dsn, $opts->{username}, $PGPASSWORD , {
     RaiseError     => 1,
     PrintError     => 0,
     AutoCommit     => 1,
