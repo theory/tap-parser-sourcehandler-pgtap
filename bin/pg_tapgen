@@ -46,21 +46,29 @@ if ($opts->{version}) {
 sub script(&;$) {
     my ($code, $fn) = @_;
     my $file = File::Spec->catfile($opts->{directory}, $fn);
-    open my $fh, '>:encoding(UTF-8)', $file or die "Cannot open $file: $!\n";
-    my $orig = select;
-    select $fh;
+    my $orig_fh = select;
+
+    my $output;
+    open my $str_fh, '>:encoding(UTF-8)', \$output;
+    select $str_fh;
     $total_tests = 0;
+    $code->();
+    close $str_fh;
+
+    open my $fh, '>:encoding(UTF-8)', $file or die "Cannot open $file: $!\n";
+    select $fh;
     print "SET client_encoding = 'UTF-8';\n",
           "SET client_min_messages = warning;\n",
           "-- CREATE EXTENSION IF NOT EXISTS pgtap;\n",
           "RESET client_min_messages;\n\n",
           "BEGIN;\n",
-          "SELECT * FROM no_plan();\n\n";
-    $code->();
-    print "SELECT * FROM finish();\nROLLBACK;\n";
-    print "-- Total tests $total_tests\n";
+          "SELECT plan($total_tests);\n\n",
+          $output,
+          "SELECT * FROM finish();\nROLLBACK;\n",
+#          "-- Total tests $total_tests\n"
+;
     close $fh or die "Error closing $file: $!\n";
-    select $orig;
+    select $orig_fh;
 }
 
 my @conn;
