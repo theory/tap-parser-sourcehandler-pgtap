@@ -142,9 +142,11 @@ sub tables_are {
         "'\n]);\n\n";
     $total_tests++;
 
+    my $saved = $total_tests;
     for my $table (@{ $tables }) {
         script { has_table($schema, $table) } "table_$schema.$table.sql";
     }
+    $total_tests = $saved;
 }
 
 sub views_are {
