@@ -378,7 +378,7 @@ C<$PGDATABASE> environment variable or to the system username.
 
 PostgreSQL user name to connect as. Defaults to the value of the C<$PGUSER>
 environment variable or to the operating system name of the user running the
-application.
+application. Password can be specified with C<$PGPASSWORD>.
 
 =item C<-h>
 
