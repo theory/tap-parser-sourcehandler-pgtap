@@ -280,9 +280,13 @@ sub columns_are {
               "SELECT $null_fn(     '$schema', '$table', '$col->[0]', 'pgtapgen');\n",
               "SELECT $def_fn('$schema', '$table', '$col->[0]', 'pgtapgen');\n";
         $total_tests = $total_tests + 4;
-        print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', '$col->[4]','pgtapgen');\n"
-            if $col->[3];
-        $total_tests++ if $col->[3];
+        if ($col->[3] ) {
+           my $col_def = $col->[4] ;
+           $col_def =~ s/'/''/g ;
+        # indenting wierd to keep print lined up
+        print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', '$col_def','pgtapgen');\n";
+          $total_tests++ ;
+        }
         print $/;
     }
 
