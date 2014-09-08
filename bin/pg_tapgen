@@ -200,6 +200,7 @@ sub functions_are {
           FROM pg_catalog.pg_proc p
           JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
          WHERE n.nspname = ?
+         ORDER BY p.proname
     });
     my $funcs = $dbh->selectcol_arrayref($sth, undef, $schema);
     return unless $funcs && @$funcs;
