@@ -85,7 +85,9 @@ script {
         schemas_are(\@schemas);
         for my $schema (@schemas) {
             tables_are($schema);
+            foreign_tables_are($schema);
             views_are($schema);
+            materialized_views_are($schema);
             sequences_are($schema);
             functions_are($schema);
         }
@@ -155,6 +157,32 @@ sub views_are {
     $total_tests++;
 }
 
+sub foreign_tables_are {
+    my $schema = shift;
+    my $tables = get_rels(f => $schema);
+    return unless $tables && @{ $tables };
+    print "SELECT foreign_tables_are('$schema', ARRAY[\n    '",
+        join("',\n    '", @$tables),
+        "'\n]);\n\n";
+    $total_tests++;
+
+    my $saved = $total_tests;
+    for my $table (@{ $tables }) {
+        script { has_foreign_table($schema, $table) } "foreign_table_$schema.$table.sql";
+    }
+    $total_tests = $saved;
+}
+
+sub materialized_views_are {
+    my $schema = shift;
+    my $tables = get_rels(m => $schema);
+    return unless $tables && @$tables;
+    print "SELECT materialized_views_are('$schema', ARRAY[\n    '",
+        join("',\n    '", @$tables),
+        "'\n]);\n\n";
+    $total_tests++;
+}
+
 sub sequences_are {
     my $schema = shift;
     my $tables = get_rels(S => $schema);
@@ -179,6 +207,17 @@ sub functions_are {
         join("',\n    '", @$funcs),
         "'\n]);\n\n";
     $total_tests++;
+}
+
+sub has_foreign_table {
+    my ($schema, $table) = @_;
+    print "SELECT has_foreign_table(
+    '$schema', '$table',
+    'Should have foreign table $schema.$table'
+);\n\n";
+    $total_tests++;
+    has_pk($schema, $table);
+    columns_are($schema, $table);
 }
 
 sub has_table {
