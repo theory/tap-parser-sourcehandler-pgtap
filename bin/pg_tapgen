@@ -274,25 +274,25 @@ sub columns_are {
     print "SELECT columns_are('$schema'::name, '$table'::name, ARRAY[\n    '",
         join("'::name,\n    '", map { $_->[0] } @{ $cols }),
         "'::name\n]);\n\n";
-
     $total_tests++;
     for my $col (@{ $cols }) {
+        my $description = "$schema.$table.$col->[0]";
         my $null_fn = $col->[2] ? 'col_not_null' : ' col_is_null';
         my $def_fn = $col->[3] ? '  col_has_default' : 'col_hasnt_default';
         #     #SELECT col_hasnt_default(
         #     #SELECT   col_has_default(
         #     #SELECT col_not_null(     
         #     #SELECT  col_is_null(
-        print "SELECT has_column(       '$schema', '$table', '$col->[0]','pgtapgen');\n",
-              "SELECT col_type_is(      '$schema', '$table', '$col->[0]', '$col->[1]','pgtapgen');\n",
-              "SELECT $null_fn(     '$schema', '$table', '$col->[0]', 'pgtapgen');\n",
-              "SELECT $def_fn('$schema', '$table', '$col->[0]', 'pgtapgen');\n";
+        print "SELECT has_column(       '$schema', '$table', '$col->[0]','$description');\n",
+              "SELECT col_type_is(      '$schema', '$table', '$col->[0]', '$col->[1]','$description type');\n",
+              "SELECT $null_fn(     '$schema', '$table', '$col->[0]', '$description null?');\n",
+              "SELECT $def_fn('$schema', '$table', '$col->[0]', '$description default?');\n";
         $total_tests = $total_tests + 4;
         if ($col->[3] ) {
            my $col_def = $col->[4] ;
            $col_def =~ s/'/''/g ;
         # indenting wierd to keep print lined up
-        print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', '$col_def','pgtapgen');\n";
+        print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', '$col_def','$description default is');\n";
           $total_tests++ ;
         }
         print $/;
