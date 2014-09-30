@@ -51,6 +51,7 @@ sub script(&;$) {
     my $output;
     open my $str_fh, '>:encoding(UTF-8)', \$output;
     select $str_fh;
+    my $saved_total_tests = $total_tests;
     $total_tests = 0;
     $code->();
     close $str_fh;
@@ -69,6 +70,7 @@ sub script(&;$) {
 ;
     close $fh or die "Error closing $file: $!\n";
     select $orig_fh;
+    $total_tests = $saved_total_tests;
 }
 
 my @conn;
@@ -150,11 +152,9 @@ sub tables_are {
         "'\n]);\n\n";
     $total_tests++;
 
-    my $saved = $total_tests;
     for my $table (@{ $tables }) {
         script { has_table($schema, $table) } "table_$schema.$table.sql";
     }
-    $total_tests = $saved;
 }
 
 sub views_are {
@@ -176,11 +176,9 @@ sub foreign_tables_are {
         "'\n]);\n\n";
     $total_tests++;
 
-    my $saved = $total_tests;
     for my $table (@{ $tables }) {
         script { has_foreign_table($schema, $table) } "foreign_table_$schema.$table.sql";
     }
-    $total_tests = $saved;
 }
 
 sub materialized_views_are {
