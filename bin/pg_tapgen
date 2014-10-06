@@ -133,8 +133,21 @@ sub schemas_are {
         join("',\n    '", @schemas),
         "'\n]);\n\n"; 
     $total_tests++;
+    &schema_owners($schemas);
 }
-
+sub schema_owners {
+    my $schemas = shift;
+    return unless @$schemas;
+    foreach my $schema ( @$schemas )  {
+      my $owner = $dbh->selectcol_arrayref(q{
+         SELECT pg_catalog.pg_get_userbyid(nspowner)
+         FROM pg_catalog.pg_namespace
+         WHERE nspname = ?;
+      }, undef, $schema)->[0];
+      print "SELECT schema_owner_is('$schema','$owner');\n";
+      $total_tests++;
+    }
+}
 sub get_rels {
     my $sth = $dbh->prepare_cached(q{
         SELECT c.relname
@@ -157,7 +170,13 @@ sub tables_are {
     $total_tests++;
 
     for my $table (@{ $tables }) {
-        script { has_table($schema, $table) } "table_$schema.$table.sql";
+      my $owner = &relation_owner($schema, $table);
+      print "SELECT table_owner_is('$schema','$table','$owner','$schema.$table owner is $owner');\n";
+      $total_tests++;
+    }
+
+    for my $table (@{ $tables }) {
+        # script { has_table($schema, $table) } "table_$schema.$table.sql";
     }
 }
 
@@ -169,6 +188,12 @@ sub views_are {
         join("',\n    '", @$tables),
         "'\n]);\n\n";
     $total_tests++;
+
+    for my $table (@{ $tables }) {
+      my $owner = &relation_owner($schema, $table);
+      print "SELECT view_owner_is('$schema','$table','$owner', '$schema.$table owner is $owner');\n";
+      $total_tests++;
+    }
 }
 
 sub foreign_tables_are {
@@ -179,6 +204,11 @@ sub foreign_tables_are {
         join("',\n    '", @$tables),
         "'\n]);\n\n";
     $total_tests++;
+    for my $table (@{ $tables }) {
+      my $owner = &relation_owner($schema, $table);
+      print "SELECT foreign_table_owner_is('$schema','$table','$owner', '$schema.$table owner is $owner');\n";
+      $total_tests++;
+    }
 
     for my $table (@{ $tables }) {
         script { has_foreign_table($schema, $table) } "foreign_table_$schema.$table.sql";
@@ -193,6 +223,11 @@ sub materialized_views_are {
         join("',\n    '", @$tables),
         "'\n]);\n\n";
     $total_tests++;
+    for my $table (@{ $tables }) {
+      my $owner = &relation_owner($schema, $table);
+      print "SELECT materialized_view_owner_is('$schema','$table','$owner','$schema.$table owner is $owner');\n";
+      $total_tests++;
+    }
 }
 
 sub sequences_are {
@@ -203,6 +238,11 @@ sub sequences_are {
         join("',\n    '", @$tables),
         "'\n]);\n\n";
     $total_tests++;
+    for my $table (@{ $tables }) {
+      my $owner = &relation_owner($schema, $table);
+      print "SELECT sequence_owner_is('$schema','$table','$owner','$schema.$table owner is $owner');\n";
+      $total_tests++;
+    }
 }
 
 sub functions_are {
@@ -220,6 +260,13 @@ sub functions_are {
         join("',\n    '", @$funcs),
         "'\n]);\n\n";
     $total_tests++;
+# 
+# debating whether to check full function existance and thus full ownership ornot
+#    for my $func (@{ $funcs }) {
+#      my $owner = &function_owner($schema, $func);
+#      print "SELECT function_owner_is('$schema','$func','$owner','$schema.$func owner is $owner');\n";
+#      $total_tests++;
+#    }
 }
 
 sub has_foreign_table {
@@ -316,6 +363,27 @@ sub _hasc {
                AND c.relname = ?
                AND x.contype = ?
         )
+    });
+    return $dbh->selectcol_arrayref($sth, undef, @_)->[0];
+}
+
+sub relation_owner {
+    my $sth = $dbh->prepare_cached(q{
+      SELECT pg_catalog.pg_get_userbyid(c.relowner)
+        FROM pg_catalog.pg_class c
+        JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = ?
+       AND c.relname =  ?
+    });
+    return $dbh->selectcol_arrayref($sth, undef, @_)->[0];
+}
+sub function_owner {
+    my $sth = $dbh->prepare_cached(q{
+          SELECT pg_catalog.pg_get_userbyid(p.proowner)
+          FROM pg_catalog.pg_proc p
+          JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
+         WHERE n.nspname =  ?
+         and p.proname =  ?
     });
     return $dbh->selectcol_arrayref($sth, undef, @_)->[0];
 }
