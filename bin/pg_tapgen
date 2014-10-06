@@ -125,8 +125,12 @@ sub get_schemas {
 sub schemas_are {
     my $schemas = shift;
     return unless @$schemas;
+    my @schemas = @$schemas;
+    unless ('public' ~~ @schemas ) {
+        push @schemas, 'public';
+    }
     print "SELECT schemas_are(ARRAY[\n    '",
-        join("',\n    '", @$schemas),
+        join("',\n    '", @schemas),
         "'\n]);\n\n"; 
     $total_tests++;
 }
