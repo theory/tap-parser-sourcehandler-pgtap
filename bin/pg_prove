@@ -184,8 +184,8 @@ C<pg_prove> by using the C<--runtests> option.
 
 Be sure to pass the C<--schema> option if your test functions are all in one
 schema, and the C<--match> option if they have names that don't start with
-“test”. For example, if you have all of your test functions in the “test”
-schema and I<ending> with “test,” run the tests like so:
+"test". For example, if you have all of your test functions in the "test"
+schema and I<ending> with "test," run the tests like so:
 
     pg_prove --dbname mydb --schema test --match 'test$'
 
@@ -362,7 +362,7 @@ run something like:
 
   psql --command "SELECT * FROM runtests('_test_'::text)"
 
-This will run any visible functions with the string “_test_” in their names.
+This will run any visible functions with the string "_test_" in their names.
 This can be especially useful if you just want to run a single test in a
 given schema. For example, this:
 
