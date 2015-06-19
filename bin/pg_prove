@@ -4,7 +4,7 @@ use strict;
 use App::Prove;
 use Getopt::Long;
 
-our $VERSION = '3.31';
+our $VERSION = '3.32';
 $|++;
 
 Getopt::Long::Configure(qw(no_ignore_case bundling pass_through));
