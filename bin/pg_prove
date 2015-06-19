@@ -405,8 +405,9 @@ tests.
   pg_prove --recurse tests/
   pg_prove --recurse sql/
 
-Recursively descend into directories when searching for tests. Not relevant
-with C<--runtests>.
+Recursively descend into directories when searching for tests. Be sure to
+specify C<--ext> if your tess do not end in C<.pg>. Not relevant with
+C<--runtests>.
 
 =item C<--ignore-exit>
 
