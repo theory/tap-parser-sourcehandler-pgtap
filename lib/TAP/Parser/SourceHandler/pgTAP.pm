@@ -215,7 +215,10 @@ sub can_handle {
 
     # If the config specifies a suffix, it's required.
     if ( my $config = $source->config_for('pgTAP') ) {
-        if ( defined $config->{suffix} ) {
+        if ( my $suffix = $config->{suffix} ) {
+            if (ref $suffix) {
+                return (grep { $suf eq $_ } @{ $suffix }) ? 1 : 0;
+            }
             return $suf eq $config->{suffix} ? 1 : 0;
         }
     }

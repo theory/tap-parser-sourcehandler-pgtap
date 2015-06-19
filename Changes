@@ -1,6 +1,9 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
 3.31
+     - The `--ext` option to `pg_prove` now always identifies pgTAP tests. Use
+       `prove` with the `--pgtap-option suffix=.foo` option to mix pgTAP tests
+       with other tests.
 
 3.30  2014-01-31T21:10:54Z
      - Removed markup from preformatted text in the `pg_prove` documentation.

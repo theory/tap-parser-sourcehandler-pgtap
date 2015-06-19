@@ -71,6 +71,7 @@ my $app = $prove_class->new;
 $app->process_args(
     @ARGV,
     (map { ('--ext' => $_) } @{ $opts->{ext} || ['.pg'] }),
+    (map { ('--pgtap-option' => "suffix=$_") } @{ $opts->{ext} || [] }),
     qw(--source pgTAP),
     ($opts->{comments} ? ('--comments') : ()),
     ($opts->{timer} ? ('--timer') : ()),
@@ -383,9 +384,19 @@ Will have C<psql> execute the C<runtests()> function like so:
   pg_prove --ext .sql tests/
 
 Set the extension for test files (default F<.pg>). May be specified multiple
-times if you have test scripts with multiple extensions:
+times if you have test scripts with multiple extensions, though all must be
+pgTAP tests:
 
   pg_prove --ext .sql --ext .pg --ext .pgt
+
+If you want to mix pgTAP tets with other TAP-emitting tests, like Perl tests,
+use C<prove> instead, where C<--ext> identifies any test file, and
+C<--pgtap-option suffix=> lets you specify one or more extensions for pgTAP
+tests.
+
+  prove --source Perl \
+        --ext .t --ext .pg \
+        --source pgTAP --pgtap-option suffix=.pg
 
 =item C<-r>
 
