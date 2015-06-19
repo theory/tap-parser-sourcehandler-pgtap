@@ -191,7 +191,7 @@ a score for how likely it is in fact a pgTAP test file. The scores are as
 follows:
 
   1    if it's not a file and starts with "pgsql:".
-  1    if it has a suffix equal to that in the "suffix" config
+  1    if it has a suffix equal to that in a "suffix" config
   1    if its suffix is ".pg"
   0.8  if its suffix is ".sql"
   0.75 if its suffix is ".s"
