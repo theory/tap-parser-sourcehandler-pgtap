@@ -6,7 +6,7 @@ use DBI;
 use DBD::Pg;
 use Getopt::Long;
 use File::Spec;
-our $VERSION = '3.32';
+our $VERSION = '3.33';
 
 Getopt::Long::Configure (qw(bundling));
 
@@ -221,8 +221,10 @@ sub columns_are {
               "SELECT col_type_is(      '$table', '$col->[0]', '$col->[1]');\n",
               "SELECT $null_fn     '$table', '$col->[0]');\n",
               "SELECT $def_fn'$table', '$col->[0]');\n";
-        print "SELECT col_default_is(   '$table', '$col->[0]', '$col->[4]');\n"
-            if $col->[3];
+        if ($col->[3]) {
+            $col->[4] =~ s/'/''/g;
+            print "SELECT col_default_is(   '$table', '$col->[0]', '$col->[4]');\n";
+        }
         print $/;
     }
 
