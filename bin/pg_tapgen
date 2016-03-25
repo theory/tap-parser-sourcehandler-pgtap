@@ -6,7 +6,7 @@ use DBI;
 use DBD::Pg;
 use Getopt::Long;
 use File::Spec;
-our $VERSION = '3.32';
+our $VERSION = '3.33';
 
 Getopt::Long::Configure (qw(bundling));
 
@@ -197,7 +197,7 @@ sub columns_are {
              , pg_catalog.format_type(a.atttypid, a.atttypmod) AS type
              , a.attnotnull AS not_null
              , a.atthasdef  AS has_default
-             , pg_catalog.pg_get_expr(d.adbin, d.adrelid)
+             , quote_literal(pg_catalog.pg_get_expr(d.adbin, d.adrelid))
           FROM pg_catalog.pg_namespace n
           JOIN pg_catalog.pg_class c ON n.oid = c.relnamespace
           JOIN pg_catalog.pg_attribute a ON c.oid = a.attrelid
@@ -221,8 +221,8 @@ sub columns_are {
               "SELECT col_type_is(      '$table', '$col->[0]', '$col->[1]');\n",
               "SELECT $null_fn     '$table', '$col->[0]');\n",
               "SELECT $def_fn'$table', '$col->[0]');\n";
-        print "SELECT col_default_is(   '$table', '$col->[0]', '$col->[4]');\n"
-            if $col->[3];
+            print "SELECT col_default_is(   '$table', '$col->[0]', $col->[4]);\n"
+                if ($col->[3]);
         print $/;
     }
 
