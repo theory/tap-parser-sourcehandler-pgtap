@@ -9,7 +9,7 @@ use TAP::Parser::Iterator::Process ();
 @ISA = qw(TAP::Parser::SourceHandler);
 TAP::Parser::IteratorFactory->register_handler(__PACKAGE__);
 
-our $VERSION = '3.31';
+our $VERSION = '3.32';
 
 =head1 Name
 
@@ -191,7 +191,7 @@ a score for how likely it is in fact a pgTAP test file. The scores are as
 follows:
 
   1    if it's not a file and starts with "pgsql:".
-  1    if it has a suffix equal to that in the "suffix" config
+  1    if it has a suffix equal to that in a "suffix" config
   1    if its suffix is ".pg"
   0.8  if its suffix is ".sql"
   0.75 if its suffix is ".s"
@@ -215,7 +215,10 @@ sub can_handle {
 
     # If the config specifies a suffix, it's required.
     if ( my $config = $source->config_for('pgTAP') ) {
-        if ( defined $config->{suffix} ) {
+        if ( my $suffix = $config->{suffix} ) {
+            if (ref $suffix) {
+                return (grep { $suf eq $_ } @{ $suffix }) ? 1 : 0;
+            }
             return $suf eq $config->{suffix} ? 1 : 0;
         }
     }
@@ -393,7 +396,7 @@ David E. Wheeler <dwheeler@cpan.org>
 
 =head1 Copyright and License
 
-Copyright (c) 2010-2014 David E. Wheeler. Some Rights Reserved.
+Copyright (c) 2010-2015 David E. Wheeler. Some Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

@@ -6,7 +6,7 @@ use DBI;
 use DBD::Pg;
 use Getopt::Long;
 use File::Spec;
-our $VERSION = '3.31';
+our $VERSION = '3.32';
 
 use Env qw(PGPASSWORD);
 
@@ -540,6 +540,6 @@ David E. Wheeler <dwheeler@cpan.org>
 
 =head1 Copyright
 
-Copyright (c) 2009-2014 David E. Wheeler. Some Rights Reserved.
+Copyright (c) 2009-2015 David E. Wheeler. Some Rights Reserved.
 
 =cut
