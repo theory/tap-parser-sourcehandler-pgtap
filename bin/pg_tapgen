@@ -8,11 +8,9 @@ use Getopt::Long;
 use File::Spec;
 our $VERSION = '3.32';
 
-use Env qw(PGPASSWORD);
-
 Getopt::Long::Configure (qw(bundling));
 
-my $opts = { psql => 'psql', directory => '.' };
+my $opts = { psql => 'psql', directory => '.', create_extension => 1 };
 my $total_tests = 0;
 
 Getopt::Long::GetOptions(
@@ -22,6 +20,7 @@ Getopt::Long::GetOptions(
     'port|p=s'            => \$opts->{port},
     'exclude-schema|N=s@' => \$opts->{exclude_schema},
     'directory|dir=s'     => \$opts->{directory},
+    'create-extension|c!' => \$opts->{create_extension},
     'verbose|v+'          => \$opts->{verbose},
     'help|H'              => \$opts->{help},
     'man|m'               => \$opts->{man},
@@ -58,11 +57,13 @@ sub script(&;$) {
 
     open my $fh, '>:encoding(UTF-8)', $file or die "Cannot open $file: $!\n";
     select $fh;
-    print "SET client_encoding = 'UTF-8';\n",
-          "SET client_min_messages = warning;\n",
-          "-- CREATE EXTENSION IF NOT EXISTS pgtap;\n",
-          "RESET client_min_messages;\n\n",
-          "BEGIN;\n",
+    print "SET client_encoding = 'UTF-8';\n";
+    if ($opts->{create_extension}) {
+        print "SET client_min_messages = warning;\n",
+            "CREATE EXTENSION IF NOT EXISTS pgtap;\n",
+            "RESET client_min_messages;\n\n";
+    }
+    print "BEGIN;\n",
           "SELECT plan($total_tests);\n\n",
           $output,
           "SELECT * FROM finish();\nROLLBACK;\n",
@@ -77,10 +78,10 @@ my @conn;
 for (qw(host port dbname)) {
     push @conn, "$_=$opts->{$_}" if defined $opts->{$_};
 }
-my $dsn = 'dbi:Pg';
-$dsn .= ':' . join ';', @conn if @conn;
+my $dsn = 'dbi:Pg:';
+$dsn .= join ';', @conn if @conn;
 
-my $dbh = DBI->connect($dsn, $opts->{username}, $PGPASSWORD , {
+my $dbh = DBI->connect($dsn, $opts->{username}, $ENV{PGPASSWORD}, {
     RaiseError     => 1,
     PrintError     => 0,
     AutoCommit     => 1,
@@ -420,6 +421,8 @@ distribution in the future.
   -p --port PORT            Port to which to connect.
   -v --verbose              Display output of test scripts while running them.
   -N --exclude-schema       Exclude a schema from the generated tests.
+  -c --create-extension     Include CREATE EXTENSION pgtap statement.
+     --no-create-extension  Excluce CREATE EXTENSION pgtap statement.
      --directory DIRECTORY  Directory to which to write the test files.
   -H --help                 Print a usage statement and exit.
   -m --man                  Print the complete documentation and exit.
@@ -479,6 +482,19 @@ compile time, usually 5432.
 =item C<--directory>
 
 Directory to which to write test files. Defaults to the current directory.
+
+=item C<-c>
+
+=item C<--create-extension>
+
+=item C<--no-create-extension>
+
+  pg_tapgen --create-exension
+  pg_tapgen -c
+  pg_tapgen --no-create-exension
+
+Enable or disable the inclusion of C<CREATE EXTENSION pgtap;> statements in
+the generated test files. Enabled by default.
 
 =item C<-v>
 

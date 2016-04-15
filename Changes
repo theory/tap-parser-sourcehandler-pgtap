@@ -3,6 +3,11 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 3.32
      - Fixed quoting of default values output by `pg_tapgen`, thanks to a pull
        request from Rodolphe Quiédeville (#7).
+     - Added `--create-extension` and `--no-create-extension` options to
+       `pg_tapgen` to include ore exclude the `CREATE EXTENSION pgtap`
+       statement in the generated test files.
+     - Fixed a bug that disallowed use of `pg_tapgen` with no database
+       options.
 
 3.31  2015-06-19T23:41:19Z
      - The `--ext` option to `pg_prove` now always identifies pgTAP tests. Use
