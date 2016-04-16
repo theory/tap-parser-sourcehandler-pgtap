@@ -67,7 +67,6 @@ sub script(&;$) {
           "SELECT plan($total_tests);\n\n",
           $output,
           "SELECT * FROM finish();\nROLLBACK;\n",
-#          "-- Total tests $total_tests\n"
 ;
     close $fh or die "Error closing $file: $!\n";
     select $orig_fh;
@@ -135,7 +134,7 @@ sub schemas_are {
         join("',\n    '", @schemas),
         "'\n]);\n\n";
     $total_tests++;
-    &schema_owners($schemas);
+    schema_owners($schemas);
 }
 sub schema_owners {
     my $schemas = shift;
@@ -172,13 +171,13 @@ sub tables_are {
     $total_tests++;
 
     for my $table (@{ $tables }) {
-      my $owner = &relation_owner($schema, $table);
+      my $owner = relation_owner($schema, $table);
       print "SELECT table_owner_is('$schema','$table','$owner','$schema.$table owner is $owner');\n";
       $total_tests++;
     }
 
     for my $table (@{ $tables }) {
-        # script { has_table($schema, $table) } "table_$schema.$table.sql";
+        script { has_table($schema, $table) } "table_$schema.$table.sql";
     }
 }
 
@@ -192,7 +191,7 @@ sub views_are {
     $total_tests++;
 
     for my $table (@{ $tables }) {
-      my $owner = &relation_owner($schema, $table);
+      my $owner = relation_owner($schema, $table);
       print "SELECT view_owner_is('$schema','$table','$owner', '$schema.$table owner is $owner');\n";
       $total_tests++;
     }
@@ -207,7 +206,7 @@ sub foreign_tables_are {
         "'\n]);\n\n";
     $total_tests++;
     for my $table (@{ $tables }) {
-      my $owner = &relation_owner($schema, $table);
+      my $owner = relation_owner($schema, $table);
       print "SELECT foreign_table_owner_is('$schema','$table','$owner', '$schema.$table owner is $owner');\n";
       $total_tests++;
     }
@@ -226,7 +225,7 @@ sub materialized_views_are {
         "'\n]);\n\n";
     $total_tests++;
     for my $table (@{ $tables }) {
-      my $owner = &relation_owner($schema, $table);
+      my $owner = relation_owner($schema, $table);
       print "SELECT materialized_view_owner_is('$schema','$table','$owner','$schema.$table owner is $owner');\n";
       $total_tests++;
     }
@@ -241,7 +240,7 @@ sub sequences_are {
         "'\n]);\n\n";
     $total_tests++;
     for my $table (@{ $tables }) {
-      my $owner = &relation_owner($schema, $table);
+      my $owner = relation_owner($schema, $table);
       print "SELECT sequence_owner_is('$schema','$table','$owner','$schema.$table owner is $owner');\n";
       $total_tests++;
     }
@@ -265,7 +264,7 @@ sub functions_are {
 #
 # debating whether to check full function existance and thus full ownership ornot
 #    for my $func (@{ $funcs }) {
-#      my $owner = &function_owner($schema, $func);
+#      my $owner = function_owner($schema, $func);
 #      print "SELECT function_owner_is('$schema','$func','$owner','$schema.$func owner is $owner');\n";
 #      $total_tests++;
 #    }
@@ -329,24 +328,24 @@ sub columns_are {
         "'::name\n]);\n\n";
     $total_tests++;
     for my $col (@{ $cols }) {
-        my $description = "$schema.$table.$col->[0]";
-        my $null_fn = $col->[2] ? 'col_not_null' : ' col_is_null';
-        my $def_fn = $col->[3] ? '  col_has_default' : 'col_hasnt_default';
-        #     #SELECT col_hasnt_default(
-        #     #SELECT   col_has_default(
-        #     #SELECT col_not_null(
-        #     #SELECT  col_is_null(
-        print "SELECT has_column(       '$schema', '$table', '$col->[0]','$description');\n",
-              "SELECT col_type_is(      '$schema', '$table', '$col->[0]', '$col->[1]','$description type');\n",
-              "SELECT $null_fn(     '$schema', '$table', '$col->[0]', '$description null?');\n",
-              "SELECT $def_fn('$schema', '$table', '$col->[0]', '$description default?');\n";
+        my $desc = 'Column ' . join('.', @{ $dbh->selectcol_arrayref(
+            'SELECT quote_ident(i) FROM unnest(?::text[]) i',
+            undef, [$schema, $table, $col->[0]],
+        ) });
+        my ($null_fn, $null_desc) = $col->[2]
+            ? ('col_not_null(', 'be NOT NULL')
+            : ('col_is_null( ', 'allow NULL');
+        my ($def_fn, $def_desc) = $col->[3]
+            ? ('col_has_default(  ', '')
+            : ('col_hasnt_default(', ' not ');
+        print "SELECT has_column(       '$schema', '$table', '$col->[0]', '$desc should exist');\n",
+            "SELECT col_type_is(      '$schema', '$table', '$col->[0]', '$col->[1]', '$desc should be type $col->[1]');\n",
+            "SELECT $null_fn     '$schema', '$table', '$col->[0]', '$desc should $null_desc');\n",
+            "SELECT $def_fn'$schema', '$table', '$col->[0]', '$desc should${def_desc}have a default');\n";
         $total_tests = $total_tests + 4;
-        if ($col->[3] ) {
-           my $col_def = $col->[4] ;
-           $col_def =~ s/'/''/g ;
-        # indenting wierd to keep print lined up
-        print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', '$col_def','$description default is');\n";
-          $total_tests++ ;
+        if ($col->[3]) {
+            print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', $col->[4], '$desc default is');\n";
+            $total_tests++ ;
         }
         print $/;
     }
