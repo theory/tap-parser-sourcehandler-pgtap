@@ -127,6 +127,7 @@ sub schemas_are {
     my $schemas = shift;
     return unless @$schemas;
     my @schemas = @$schemas;
+    no if $] >= 5.017011, warnings => 'experimental::smartmatch';
     unless ('public' ~~ @schemas ) {
         push @schemas, 'public';
     }
