@@ -7,8 +7,8 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
          - Added `--create-extension` and `--no-create-extension` options to
            include or exclude the `CREATE EXTENSION pgtap` statement in the
            generated test files.
-         - Fixed a bug threw an error when no database connection options were
-           specified.
+         - Fixed a bug taht threw an error when no database connection options
+           were specified.
          - Added support for the $PGPASSWORD environment variable.
          - The emitted test scripts now include an appropriate plan that
            counts assertions, rather than `no_plan`, thanks to @slaught.
@@ -20,9 +20,8 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
          - Column tests now explicitly specify the table schema and test
            descriptions, thanks to @slaught.
          - The column default tests now work properly with default values that
-           include strings, such as `nextval(''artist_id_seq'')`, thanks to
-           @slaught.
-
+           include strings inside function calls, such as
+           `nextval(''artist_id_seq'')`.
 
 3.31  2015-06-19T23:41:19Z
      - The `--ext` option to `pg_prove` now always identifies pgTAP tests. Use
