@@ -310,7 +310,10 @@ sub columns_are {
              , pg_catalog.format_type(a.atttypid, a.atttypmod) AS type
              , a.attnotnull AS not_null
              , a.atthasdef  AS has_default
-             , quote_literal(pg_catalog.pg_get_expr(d.adbin, d.adrelid))
+             , CASE WHEN pg_catalog.pg_get_expr(d.adbin, d.adrelid) LIKE '''%'
+                    THEN pg_catalog.pg_get_expr(d.adbin, d.adrelid)
+                    ELSE quote_literal(pg_catalog.pg_get_expr(d.adbin, d.adrelid))
+               END
           FROM pg_catalog.pg_namespace n
           JOIN pg_catalog.pg_class c ON n.oid = c.relnamespace
           JOIN pg_catalog.pg_attribute a ON c.oid = a.attrelid
