@@ -22,6 +22,9 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
          - The column default tests now work properly with default values that
            include strings inside function calls, such as
            `nextval(''artist_id_seq'')`.
+     - Refactored `pg_prove` to better follow the interface provided by
+       App::Prove. This improves option processing, notably single-letter
+       option bundling now works properly.
 
 3.31  2015-06-19T23:41:19Z
      - The `--ext` option to `pg_prove` now always identifies pgTAP tests. Use

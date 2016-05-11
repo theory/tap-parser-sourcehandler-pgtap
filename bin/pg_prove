@@ -7,99 +7,124 @@ use Getopt::Long;
 our $VERSION = '3.32';
 $|++;
 
-Getopt::Long::Configure(qw(no_ignore_case bundling pass_through));
+# Fire up the app, process args, and run the tests.
+my $app = App::Prove::pgTAP->new;
+$app->process_args(@ARGV);
+exit($app->run ? 0 : 1);
 
-my $opts = { color => 1, comments => 1 };
+#######################################################################################
+package App::Prove::pgTAP;
+use base 'App::Prove';
 
-Getopt::Long::GetOptions(
-    'psql-bin|b=s' => \$opts->{psql},
-    'dbname|d=s'   => \$opts->{dbname},
-    'username|U=s' => \$opts->{username},
-    'host|h=s'     => \$opts->{host},
-    'port|p=s'     => \$opts->{port},
-    'pset|P=s%'    => \$opts->{pset},
-    'set|S=s%'     => \$opts->{set},
-    'runtests|R'   => \$opts->{runtests},
-    'schema|s=s'   => \$opts->{schema},
-    'match|x=s'    => \$opts->{match},
-    'timer|t!'     => \$opts->{timer},
-    'version|V'    => \$opts->{version},
-    'ext=s@'       => \$opts->{ext},
-    'comments|o!'  => \$opts->{comments},
-    'help|H|?'     => \$opts->{help},
-    'man|m'        => \$opts->{man},
-) or require Pod::Usage && Pod::Usage::pod2usage(2);
-
-if ($opts->{version}) {
-    print 'pg_prove ', main->VERSION, $/;
-    exit;
+BEGIN {
+    __PACKAGE__->mk_methods(qw(
+        psql dbname username host port pset set runtests schema match ext
+    ));
 }
 
-if ( $opts->{help} or $opts->{man} ) {
-    require Pod::Usage;
-    Pod::Usage::pod2usage(
-        '-sections' => $opts->{man} ? '.+' : '(?i:(Usage|Options))',
-        '-verbose'  => 99,
-        '-exitval'  => 0,
-    )
+sub _initialize {
+    my $self = shift->SUPER::_initialize(@_);
+
+    # Set up defaults.
+    $self->{sources} = ['pgTAP'];
+    $self->{color} = 1;
+    $self->{comments} = 1;
+    return $self;
 }
 
-if ($opts->{version}) {
-    print 'pg_prove ', main->VERSION, $/;
-    exit;
+sub process_args {
+    my $self = shift;
+    my $opts;
+    # We need to locally define a function to do argument processing.
+    my $get_options = sub(@) {
+        Getopt::Long::Configure(qw(no_ignore_case bundling pass_through));
+        # Silence "Duplicate specification" warnings, since we replace some of
+        # App::Prove's options.
+        local $^W;
+        return Getopt::Long::GetOptions(
+            @_,
+            'psql-bin|b=s' => \$opts->{psql},
+            'dbname|d=s'   => \$opts->{dbname},
+            'username|U=s' => \$opts->{username},
+            'host|h=s'     => \$opts->{host},
+            'port|p=s'     => \$opts->{port},
+            'pset|P=s%'    => \$opts->{pset},
+            'set|S=s%'     => \$opts->{set},
+            'runtests|R'   => \$self->{runtests},
+            'schema|s=s'   => \$self->{schema},
+            'match|x=s'    => \$self->{match},
+            'version|V'    => \$self->{show_version},
+            'help|H|?'     => \$self->{show_help},
+            'man|m'        => \$self->{show_man},
+        );
+    };
+
+    do {
+        # Replace GetOptions in App::Prove and process the args. Yes, this is
+        # ugly, but it's the only way to inject additional options into the
+        # processing without running GetOptions twice (which has its own
+        # issues; see https://rt.cpan.org/Ticket/Display.html?id=114335).
+        no warnings 'redefine';
+        local *App::Prove::GetOptions = $get_options;
+        $self->SUPER::process_args(@_);
+    };
+
+    # Set argv to pass stuff through to pgTAP.
+    push @{ $self->{argv} } => (
+        (map { ('--pgtap-option' => "suffix=$_") } @{ $self->{extensions} || [] }),
+        (map {
+            ('--pgtap-option' => "$_=$opts->{$_}")
+        } grep {
+            $opts->{$_}
+        } qw(psql dbname username host port)),
+        (map {
+            ('--pgtap-option' => "pset=$_=$opts->{pset}{$_}")
+        } keys %{ $opts->{pset} }),
+        (map {
+            ('--pgtap-option' => "set=$_=$opts->{set}{$_}")
+        } keys %{ $opts->{set} })
+    );
+
+    $self->{extensions} ||= ['.pg'];
+    return;
 }
 
-my $prove_class = 'App::Prove';
-my $runtests_call;
+sub _get_tests {
+    my $self = shift;
 
-# --schema and --match assume --runtests.
-if ($opts->{runtests} || $opts->{schema} || $opts->{match}) {
+    # --schema and --match assume --runtests.
+    return $self->SUPER::_get_tests(@_)
+        unless $self->{runtests} || $self->{schema} || $self->{match};
+
     # We're just going to call `runtests()`.
-    $prove_class .= '::pgTAP';
     my @args;
     for my $key (qw(schema match)) {
-        next unless $opts->{$key};
-        (my $arg = $opts->{$key}) =~ s/'/\\'/g;
+        next unless $self->{$key};
+        (my $arg = $self->{$key}) =~ s/'/\\'/g;
         # Gotta cast the arguments.
         push @args, "'$arg'::" . ($key eq 'schema' ? 'name' : 'text');
     }
 
-    $runtests_call = 'runtests(' . join( ', ', @args ) . ');'
+    my $runtests_call = 'runtests(' . join( ', ', @args ) . ');';
+    return [
+        "pgsql: SELECT * FROM $runtests_call",
+        $runtests_call,
+    ];
 }
 
-my $app = $prove_class->new;
-$app->process_args(
-    @ARGV,
-    (map { ('--ext' => $_) } @{ $opts->{ext} || ['.pg'] }),
-    (map { ('--pgtap-option' => "suffix=$_") } @{ $opts->{ext} || [] }),
-    qw(--source pgTAP),
-    ($opts->{comments} ? ('--comments') : ()),
-    ($opts->{timer} ? ('--timer') : ()),
-    (map {
-        ('--pgtap-option' => "$_=$opts->{$_}")
-    } grep {
-        $opts->{$_}
-    } qw(psql dbname username host port)),
-    (map {
-        ('--pgtap-option' => "pset=$_=$opts->{pset}{$_}")
-    } keys %{ $opts->{pset} }),
-    (map {
-        ('--pgtap-option' => "set=$_=$opts->{set}{$_}")
-    } keys %{ $opts->{set} })
-);
+sub print_version {
+    my $self = shift;
+    print 'pg_prove ', main->VERSION, $/;
+}
 
-exit($app->run ? 0 : 1);
-
-PGPROVE: {
-    package # Hide from indexer.
-        App::Prove::pgTAP;
-    use base 'App::Prove';
-    sub _get_tests {
-        return [
-            "pgsql: SELECT * FROM $runtests_call",
-            $runtests_call,
-        ]
-    }
+sub _help {
+    my ( $self, $verbosity ) = @_;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        '-sections' => $verbosity > 1 ? '.+' : '(?i:(Usage|Options))',
+        '-verbose'  => 99,
+        '-exitval'  => 0,
+    )
 }
 
 __END__
