@@ -30,5 +30,8 @@
 # Avoid build files.
 ^TAP-Parser-SourceHandler
 
+# Avoid generated files.
+^t/scripts
+
 # Avoid Pod tests.
 t/pod[^.]*\.t
