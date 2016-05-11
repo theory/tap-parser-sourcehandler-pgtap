@@ -1,6 +1,6 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
-3.32
+3.32  2016-05-11T23:37:30Z
      - Fixed quoting of default values output by `pg_tapgen`, thanks to a pull
        request from Rodolphe Quiédeville (#7).
      - Various fixes and imrovements to `pg_tapgen`, including:
