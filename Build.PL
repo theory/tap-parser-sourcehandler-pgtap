@@ -46,9 +46,9 @@ $class->new(
     },
     meta_merge         => {
         resources => {
-            homepage    => 'http://search.cpan.org/dist/Tap-Parser-Sourcehandler-pgTAP/',
-            bugtracker  => 'http://github.com/theory/tap-parser-sourcehandler-pgtap/issues/',
-            repository  => 'http://github.com/theory/tap-parser-sourcehandler-pgtap',
+            homepage    => 'https://search.cpan.org/dist/Tap-Parser-Sourcehandler-pgTAP/',
+            bugtracker  => 'https://github.com/theory/tap-parser-sourcehandler-pgtap/issues/',
+            repository  => 'https://github.com/theory/tap-parser-sourcehandler-pgtap',
         }
     },
 )->create_build_script;

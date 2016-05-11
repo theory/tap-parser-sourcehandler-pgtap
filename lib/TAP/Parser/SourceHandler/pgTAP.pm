@@ -380,14 +380,14 @@ sub make_iterator {
 
 =head1 Support
 
-This module is managed in an open L<GitHub
-repository|http://github.com/theory/tap-parser-sourcehandler-pgtap/>. Feel
-free to fork and contribute, or to clone
+This module is managed in an open
+L<GitHub repository|https://github.com/theory/tap-parser-sourcehandler-pgtap/>.
+Feel free to fork and contribute, or to clone
 C<git://github.com/theory/tap-parser-sourcehandler-pgtap.git> and send
 patches!
 
 Found a bug? Please
-L<post|http://github.com/theory/tap-parser-sourcehandler-pgtap/issues> or
+L<post|https://github.com/theory/tap-parser-sourcehandler-pgtap/issues> or
 L<email|mailto:bug-tap-parser-sourcehandler-pgtap@rt.cpan.org> a report!
 
 =head1 Author
@@ -396,7 +396,7 @@ David E. Wheeler <dwheeler@cpan.org>
 
 =head1 Copyright and License
 
-Copyright (c) 2010-2015 David E. Wheeler. Some Rights Reserved.
+Copyright (c) 2010-2016 David E. Wheeler. Some Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
