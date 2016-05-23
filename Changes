@@ -1,17 +1,19 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
 3.33
+     - Added trigger-testing functions to the output of `pg_tapgen`, thanks to
+       Rodolphe Quiédeville (PR #11).
 
 3.32  2016-05-11T23:37:30Z
      - Fixed quoting of default values output by `pg_tapgen`, thanks to a pull
        request from Rodolphe Quiédeville (#7).
-     - Various fixes and imrovements to `pg_tapgen`, including:
+     - Various fixes and improvements to `pg_tapgen`, including:
          - Added `--create-extension` and `--no-create-extension` options to
            include or exclude the `CREATE EXTENSION pgtap` statement in the
            generated test files.
-         - Fixed a bug taht threw an error when no database connection options
+         - Fixed a bug that threw an error when no database connection options
            were specified.
-         - Added support for the $PGPASSWORD environment variable.
+         - Added support for the `$PGPASSWORD` environment variable.
          - The emitted test scripts now include an appropriate plan that
            counts assertions, rather than `no_plan`, thanks to @slaught.
          - Added a number of additional tests to the emitted tests scripts,

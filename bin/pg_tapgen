@@ -37,7 +37,7 @@ if ( $opts->{help} or $opts->{man} ) {
 }
 
 if ($opts->{version}) {
-    print 'pg_prove ', main->VERSION, $/;
+    print 'pg_prove ', main->VERSION, "\n";
     exit;
 }
 
@@ -351,7 +351,7 @@ sub columns_are {
             print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', $col->[4], '$desc default is');\n";
             $total_tests++ ;
         }
-        print $/;
+        print "\n";
     }
 
 }
@@ -382,13 +382,14 @@ sub triggers_are {
         join("',\n    '", map { $_->[0] } @{ $triggers }),
         "'\n]);\n\n";
     $total_tests++;
-    
+
     for my $trigger (@{ $triggers }) {
         print "SELECT has_trigger( '$table', '$trigger->[0]');\n",
               "SELECT trigger_is(  '$table', '$trigger->[0]', '$trigger->[2]');\n";
         $total_tests = $total_tests + 2;
     }
 
+    print "\n";
 }
 
 sub _hasc {
