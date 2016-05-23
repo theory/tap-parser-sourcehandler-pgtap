@@ -358,23 +358,16 @@ sub columns_are {
 
 sub triggers_are {
     my ($schema, $table) = @_;
-    print "SET search_path = '$schema';\n";
     my $triggers = $dbh->selectall_arrayref(q{
-        SELECT t.tgname
-             , c.relname
-             , f.proname
-             , t.tgtype
-          FROM pg_trigger t
-             , pg_class c
-             , pg_proc f
-             , pg_namespace n
-         WHERE c.oid=t.tgrelid
-           AND f.oid = t.tgfoid
-           AND NOT t.tgisinternal
-           AND c.relnamespace = n.oid
-           AND n.nspname = ?
-           AND c.relname = ?
-         ORDER BY t.oid
+    SELECT t.tgname, ni.nspname, p.proname
+      FROM pg_catalog.pg_trigger t
+      JOIN pg_catalog.pg_class ct     ON ct.oid = t.tgrelid
+      JOIN pg_catalog.pg_namespace nt ON nt.oid = ct.relnamespace
+      JOIN pg_catalog.pg_proc p       ON p.oid = t.tgfoid
+      JOIN pg_catalog.pg_namespace ni ON ni.oid = p.pronamespace
+     WHERE nt.nspname = ?
+       AND ct.relname = ?
+       AND NOT t.tgisinternal
     }, undef, $schema, $table);
 
     return unless $triggers && @{ $triggers };
@@ -384,8 +377,8 @@ sub triggers_are {
     $total_tests++;
 
     for my $trigger (@{ $triggers }) {
-        print "SELECT has_trigger( '$table', '$trigger->[0]');\n",
-              "SELECT trigger_is(  '$table', '$trigger->[0]', '$trigger->[2]');\n";
+        print "SELECT has_trigger( '$schema', '$table', '$trigger->[0]'::name);\n",
+              "SELECT trigger_is(  '$schema', '$table', '$trigger->[0]', '$trigger->[1]', '$trigger->[2]');\n";
         $total_tests = $total_tests + 2;
     }
 
