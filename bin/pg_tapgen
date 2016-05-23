@@ -345,7 +345,7 @@ sub columns_are {
         print "SELECT has_column(       '$schema', '$table', '$col->[0]', '$desc should exist');\n",
             "SELECT col_type_is(      '$schema', '$table', '$col->[0]', '$col->[1]', '$desc should be type $col->[1]');\n",
             "SELECT $null_fn     '$schema', '$table', '$col->[0]', '$desc should $null_desc');\n",
-            "SELECT $def_fn'$schema', '$table', '$col->[0]', '$desc should${def_desc}have a default');\n";
+            "SELECT $def_fn'$schema', '$table', '$col->[0]', '$desc should${def_desc} have a default');\n";
         $total_tests = $total_tests + 4;
         if ($col->[3]) {
             print "SELECT col_default_is(   '$schema', '$table', '$col->[0]', $col->[4], '$desc default is');\n";
