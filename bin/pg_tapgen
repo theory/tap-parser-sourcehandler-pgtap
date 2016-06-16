@@ -100,6 +100,7 @@ script {
             materialized_views_are($schema);
             sequences_are($schema);
             functions_are($schema);
+            enums_are($schema);
         }
     }
 } 'schema.sql';
@@ -270,6 +271,30 @@ sub functions_are {
 #    }
 }
 
+sub enums_are {
+    my $schema = shift;
+    my $enums = $dbh->selectall_arrayref(q{
+    SELECT e.oid, e.typname
+      FROM pg_catalog.pg_type e
+      JOIN pg_catalog.pg_namespace n ON n.oid = e.typnamespace
+     WHERE e.typtype = 'e'
+       AND n.nspname = ?
+    }, undef, $schema);
+    return unless $enums && @{ $enums };
+    print "SELECT enums_are('$schema', ARRAY[\n    '",
+        join("',\n    '", map { $_->[1] } @{ $enums }),
+    "'\n]);\n\n";
+    $total_tests++;
+
+    for my $enum (@{ $enums }) {
+      my $labels = enum_labels($enum->[0]);
+      print "SELECT enum_has_labels('$schema','$enum->[1]', ARRAY['",
+          join("','", map { $_->[0] } @{ $labels }),
+      "']);\n\n";
+      $total_tests++;
+    }
+}
+
 sub has_foreign_table {
     my ($schema, $table) = @_;
     print "SELECT has_foreign_table(
@@ -421,6 +446,16 @@ sub function_owner {
     });
     return $dbh->selectcol_arrayref($sth, undef, @_)->[0];
 }
+
+sub enum_labels {
+    my $sth = $dbh->prepare_cached(q{
+      SELECT e.enumlabel
+        FROM pg_catalog.pg_enum e
+      WHERE e.enumtypid = ?
+    });
+    return $dbh->selectall_arrayref($sth, undef, @_);
+}
+
 
 __END__
 
