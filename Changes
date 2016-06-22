@@ -3,6 +3,8 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 3.33
      - Added trigger-testing functions to the output of `pg_tapgen`, thanks to
        Rodolphe Quiédeville (PR #11).
+     - Added enum-testing functions to the output of `pg_tapgen`, thanks to
+       Rodolphe Quiédeville (PR #13).
 
 3.32  2016-05-11T23:37:30Z
      - Fixed quoting of default values output by `pg_tapgen`, thanks to a pull
