@@ -290,9 +290,10 @@ sub enums_are {
       my $labels = enum_labels($enum->[0]);
       print "SELECT enum_has_labels('$schema','$enum->[1]', ARRAY['",
           join("','", map { $_->[0] } @{ $labels }),
-      "']);\n\n";
+      "']);\n";
       $total_tests++;
     }
+    print "\n";
 }
 
 sub has_foreign_table {
@@ -449,9 +450,10 @@ sub function_owner {
 
 sub enum_labels {
     my $sth = $dbh->prepare_cached(q{
-      SELECT e.enumlabel
-        FROM pg_catalog.pg_enum e
-      WHERE e.enumtypid = ?
+        SELECT enumlabel
+          FROM pg_catalog.pg_enum
+         WHERE enumtypid = ?
+         ORDER BY enumsortorder
     });
     return $dbh->selectall_arrayref($sth, undef, @_);
 }
