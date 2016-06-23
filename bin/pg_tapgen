@@ -101,6 +101,7 @@ script {
             sequences_are($schema);
             functions_are($schema);
             enums_are($schema);
+            extensions_are($schema);
         }
     }
 } 'schema.sql';
@@ -293,6 +294,23 @@ sub enums_are {
       "']);\n";
       $total_tests++;
     }
+    print "\n";
+}
+
+sub extensions_are {
+    my $schema = shift;
+    my $extensions = $dbh->selectall_arrayref(q{
+    SELECT e.oid, e.extname, e.extversion
+      FROM pg_catalog.pg_extension e
+      JOIN pg_catalog.pg_namespace n ON n.oid = e.extnamespace
+     WHERE n.nspname = ?
+    }, undef, $schema);
+    return unless $extensions && @{ $extensions };
+    print "SELECT extensions_are('$schema', ARRAY[\n    '",
+        join("',\n    '", map { $_->[1] } @{ $extensions }),
+    "'\n]);\n";
+    $total_tests++;
+
     print "\n";
 }
 
