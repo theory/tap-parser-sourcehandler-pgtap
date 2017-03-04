@@ -1,5 +1,8 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
+3.34
+
+
 3.33  2017-03-04T23:40:01Z
      - Added trigger-testing functions to the output of `pg_tapgen`, thanks to
        Rodolphe Quiédeville (PR #11).
