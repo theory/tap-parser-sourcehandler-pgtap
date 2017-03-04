@@ -5,6 +5,9 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
        Rodolphe Quiédeville (PR #11).
      - Added enum- and extension-testing functions to the output of
        `pg_tapgen`, thanks to Rodolphe Quiédeville (PR #13, PR #14).
+     - Explicitly set the `psql` `pager` variable to `off`, instead of not
+       setting it, to ensure it is always off. Thanks to Keith Fiske for the
+       report (theory/pgtap#135).
 
 3.32  2016-05-11T23:37:30Z
      - Fixed quoting of default values output by `pg_tapgen`, thanks to a pull

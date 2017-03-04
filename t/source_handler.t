@@ -25,7 +25,7 @@ $dir    = catdir curdir, 't', 'bin' unless -d $dir;
       --no-psqlrc
       --no-align
       --quiet
-      --pset pager=
+      --pset pager=off
       --pset tuples_only=true
       --set ON_ERROR_STOP=1
     );
