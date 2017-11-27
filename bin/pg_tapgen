@@ -251,18 +251,34 @@ sub sequences_are {
 sub functions_are {
     my $schema = shift;
     my $sth = $dbh->prepare(q{
-        SELECT p.proname
+        SELECT p.proname, md5(p.prosrc) as md5, proargtypes::text
           FROM pg_catalog.pg_proc p
           JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
          WHERE n.nspname = ?
          ORDER BY p.proname
     });
-    my $funcs = $dbh->selectcol_arrayref($sth, undef, $schema);
-    return unless $funcs && @$funcs;
+    my $allfuncs = $dbh->selectall_arrayref($sth, undef, $schema);
+    return unless $allfuncs && @$allfuncs;
+    my @funcs=map{$_->[0]} @$allfuncs;
     print "SELECT functions_are('$schema', ARRAY[\n    '",
-        join("',\n    '", @$funcs),
+        join("',\n    '", @funcs),
         "'\n]);\n\n";
     $total_tests++;
+    foreach my $row (@$allfuncs)
+    {
+        my ($proname,$md5,$proargs)=@$row;
+        print qq{
+SELECT is(md5(prosrc),'$md5')
+FROM pg_catalog.pg_proc
+WHERE proname = '$proname'
+  AND proargtypes::text='$proargs'
+  AND pronamespace=(SELECT oid
+                    FROM pg_catalog.pg_namespace
+		    WHERE nspname='$schema');
+
+};
+        $total_tests++;
+    }
 #
 # debating whether to check full function existance and thus full ownership ornot
 #    for my $func (@{ $funcs }) {
