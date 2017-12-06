@@ -268,7 +268,7 @@ sub functions_are {
     {
         my ($proname,$md5,$proargs)=@$row;
         print qq{
-SELECT is(md5(prosrc),'$md5')
+SELECT is(md5(prosrc),'$md5','function $proname body should match checksum')
 FROM pg_catalog.pg_proc
 WHERE proname = '$proname'
   AND proargtypes::text='$proargs'
