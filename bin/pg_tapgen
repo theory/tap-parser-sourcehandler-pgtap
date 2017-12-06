@@ -264,19 +264,14 @@ sub functions_are {
         join("',\n    '", @funcs),
         "'\n]);\n\n";
     $total_tests++;
-    foreach my $row (@$allfuncs)
-    {
-        my ($proname,$md5,$proargs)=@$row;
-        print qq{
-SELECT is(md5(prosrc),'$md5','function $proname body should match checksum')
-FROM pg_catalog.pg_proc
-WHERE proname = '$proname'
-  AND proargtypes::text='$proargs'
-  AND pronamespace=(SELECT oid
-                    FROM pg_catalog.pg_namespace
-		    WHERE nspname='$schema');
-
-};
+    for my $row (@$allfuncs) {
+        my ($proname, $md5, $proargs)=@$row;
+        print qq{SELECT is(md5(p.prosrc), '$md5', 'Function $proname body should match checksum')
+  FROM pg_catalog.pg_proc p
+  JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
+ WHERE n.nspname = '$schema'
+   AND proname = '$proname'
+   AND proargtypes::text = '$proargs';\n\n};
         $total_tests++;
     }
 #
