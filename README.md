@@ -3,9 +3,9 @@ TAP/Parser/SourceHandler/pgTAP version 3.34
 
 This module adds support for executing [pgTAP](http://pgtap.org/) PostgreSQL
 tests under Test::Harness and C<prove>. This is useful for executing your Perl
-tests and your PostgreSQL tests together, and analysing their results.
+tests and your PostgreSQL tests together, and analyzing their results.
 
-Most likely. you'll want to use it with C<prove> to execute your Perl and
+Most likely. you'll want to use it with `prove` to execute your Perl and
 pgTAP tests:
 
     prove --source Perl \
@@ -14,7 +14,7 @@ pgTAP tests:
                          --pgtap-option username=postgres \
                          --pgtap-option suffix=.pg
 
-Or in F<Build.PL> for your application with pgTAP tests in F<t/*.pg>:
+Or in `Build.PL` for your application with pgTAP tests in `t/*.pg`:
 
   Module::Build->new(
       module_name        => 'MyApp',
