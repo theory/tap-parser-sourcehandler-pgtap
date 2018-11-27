@@ -35,3 +35,6 @@
 
 # Avoid Pod tests.
 t/pod[^.]*\.t
+
+# Avoid docker files.
+^dist/
