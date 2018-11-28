@@ -13,10 +13,23 @@ perl:
   - "5.10"
   - "5.8"
 
-after_script:
-  - docker build --pull -t pg_prove:latest -t pg_prove:3.34 -f dist/Dockerfile
+matrix:
+  include:
+    - perl: "5.28"
+      env: _PUSHIT=yes
+
+stages:
+  - name: after_success
+    # require the branch name to be master (note for PRs this is the base branch name)
+    if: branch = master AND env(_PUSHIT) = yes
 
 # DOCKER_USER and $DOCKER_PASS are set in the Travis settings for the project.
 after_success:
-  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-  - docker push itheory/pg_prove
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+      docker build --pull -t pg_prove:latest -t pg_prove:3.34 -f dist/Dockerfile
+      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+      docker push itheory/pg_prove
+    fi
+
+after_script:
+  - docker images
