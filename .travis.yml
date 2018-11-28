@@ -15,8 +15,7 @@ perl:
 
 jobs:
   include:
-    - stage: 🐋 Docker
-      perl: "5.28"
+    - stage: 🐳 Docker
       if: branch = master
       script:
         # DOCKER_USER and $DOCKER_PASS are set in the Travis settings for the project.
