@@ -16,6 +16,7 @@ perl:
 matrix:
   include:
     - perl: "5.28"
+      if: branch = master
       script:
         # DOCKER_USER and $DOCKER_PASS are set in the Travis settings for the project.
         - docker build --pull -t $DOCKER_USER/pg_prove:latest -t $DOCKER_USER/pg_prove:3.34 -f dist/Dockerfile .
