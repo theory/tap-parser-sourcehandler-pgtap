@@ -1,12 +1,22 @@
+services: docker
 language: perl
 perl:
+  - "5.28"
+  - "5.26"
+  - "5.24"
   - "5.22"
   - "5.20"
-  - "5.20-extras"
   - "5.18"
-  - "5.18-extras"
   - "5.16"
   - "5.14"
   - "5.12"
   - "5.10"
   - "5.8"
+
+after_script:
+  - docker build --pull -t pg_prove:latest -t pg_prove:3.34 -f dist/Dockerfile
+
+# DOCKER_USER and $DOCKER_PASS are set in the Travis settings for the project.
+after_success:
+  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+  - docker push itheory/pg_prove
