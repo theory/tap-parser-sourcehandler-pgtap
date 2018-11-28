@@ -19,7 +19,7 @@ jobs:
       if: branch = master
       script:
         # DOCKER_USER and $DOCKER_PASS are set in the Travis settings for the project.
-        - docker build --pull -t $DOCKER_USER/pg_prove:latest -t $DOCKER_USER/pg_prove:3.34 -f dist/Dockerfile .
+        - docker build --pull -t $DOCKER_USER/pg_prove:latest -t $DOCKER_USER/pg_prove:$(perl bin/pg_prove -V | awk '{print $2}') -f dist/Dockerfile .
         - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
         - docker push $DOCKER_USER/pg_prove
         - docker images
