@@ -16,18 +16,9 @@ perl:
 matrix:
   include:
     - perl: "5.28"
-      env: _PUSHIT=yes
-
-stages:
-  - name: after_success
-    # require the branch name to be master (note for PRs this is the base branch name)
-    if: branch = master AND env(_PUSHIT) = yes
-
-# DOCKER_USER and $DOCKER_PASS are set in the Travis settings for the project.
-after_success:
-  - docker build --pull -t $DOCKER_USER/pg_prove:latest -t $DOCKER_USER/pg_prove:3.34 -f dist/Dockerfile .
-  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-  - docker push $DOCKER_USER/pg_prove
-
-after_script:
-  - docker images
+      script:
+        # DOCKER_USER and $DOCKER_PASS are set in the Travis settings for the project.
+        - docker build --pull -t $DOCKER_USER/pg_prove:latest -t $DOCKER_USER/pg_prove:3.34 -f dist/Dockerfile .
+        - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+        - docker push $DOCKER_USER/pg_prove
+        - docker images
