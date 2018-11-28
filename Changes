@@ -1,5 +1,7 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
+3.35
+
 3.34  2018-11-28T03:04:53Z
      - Added function-checksum tests to the output of `pg_tapgen`, thanks to
        Marc Cousin (PR #17).

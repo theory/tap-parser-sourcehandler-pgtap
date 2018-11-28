@@ -1,4 +1,4 @@
-TAP/Parser/SourceHandler/pgTAP version 3.34
+TAP/Parser/SourceHandler/pgTAP version 3.35
 ===========================================
 
 [![CPAN version](https://badge.fury.io/pl/TAP-Parser-SourceHandler-pgTAP.svg)](https://badge.fury.io/pl/TAP-Parser-SourceHandler-pgTAP)
