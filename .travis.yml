@@ -25,9 +25,9 @@ stages:
 
 # DOCKER_USER and $DOCKER_PASS are set in the Travis settings for the project.
 after_success:
-  - docker build --pull -t pg_prove:latest -t pg_prove:3.34 -f dist/Dockerfile .
+  - docker build --pull -t $DOCKER_USER/pg_prove:latest -t $DOCKER_USER/pg_prove:3.34 -f dist/Dockerfile .
   - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-  - docker push itheory/pg_prove
+  - docker push $DOCKER_USER/pg_prove
 
 after_script:
   - docker images
