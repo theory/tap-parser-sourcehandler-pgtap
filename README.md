@@ -1,7 +1,7 @@
 TAP/Parser/SourceHandler/pgTAP version 3.34
 ===========================================
 
-This module adds support for executing [pgTAP](http://pgtap.org/) PostgreSQL
+This module adds support for executing [pgTAP](https://pgtap.org/) PostgreSQL
 tests under Test::Harness and `prove. This is useful for executing your Perl
 tests and your PostgreSQL tests together, and analyzing their results.
 
