@@ -24,7 +24,8 @@ jobs:
       install:
         - cpanm --notest --installdeps .
       script:
-        - cpanm --test-only .
+        - cpanm -v --test-only .
+
     - stage: 🐳 Docker
       if: branch = master
       script:
