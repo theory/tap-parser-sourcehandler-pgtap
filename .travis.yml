@@ -15,6 +15,16 @@ perl:
 
 jobs:
   include:
+    - stage: Windows
+      os: windows
+      language: shell
+      before_install:
+        - cinst -y strawberryperl
+        - export "PATH=/c/Strawberry/perl/site/bin:/c/Strawberry/perl/bin:/c/Strawberry/c/bin:$PATH"
+      install:
+        - cpanm --notest --installdeps .
+      script:
+        - cpanm --test-only .
     - stage: 🐳 Docker
       if: branch = master
       script:
