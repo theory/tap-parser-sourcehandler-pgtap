@@ -18,6 +18,9 @@ jobs:
     - stage: Windows
       os: windows
       language: shell
+      env:
+        DOCKER_PASS: ""
+        DOCKER_USER: ""
       before_install:
         - cinst -y strawberryperl
         - export "PATH=/c/Strawberry/perl/site/bin:/c/Strawberry/perl/bin:/c/Strawberry/c/bin:$PATH"
