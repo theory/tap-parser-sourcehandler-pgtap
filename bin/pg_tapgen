@@ -447,7 +447,7 @@ sub _hasc {
               FROM pg_catalog.pg_namespace n
               JOIN pg_catalog.pg_class c      ON c.relnamespace = n.oid
               JOIN pg_catalog.pg_constraint x ON c.oid = x.conrelid
-             WHERE c.relhaspkey = true
+             WHERE exists (select 1 from pg_index where indrelid = c.oid and indisprimary)
                AND n.nspname = ?
                AND c.relname = ?
                AND x.contype = ?
