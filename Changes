@@ -7,6 +7,10 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
        Marc Cousin (PR #17).
      - Released a Docker image: https://hub.docker.com/r/itheory/pg_prove/.
      - Converted URLs in documentation to HTTPS.
+     - Fixed Postgres 11 prinary-key query incompatability in `pg_tapgen` by
+       checking the `pg_index.indisprimary` column instead of
+       `pg_catalog.relhaspkey`, since the lattter has been removed. Thanks to
+       @KiriakosGeorgiou for the report (#19).
 
 3.33  2017-03-04T23:40:01Z
      - Added trigger-testing functions to the output of `pg_tapgen`, thanks to
