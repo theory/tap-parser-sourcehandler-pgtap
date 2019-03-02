@@ -1,5 +1,7 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
+3.36
+
 3.35  2019-03-02T19:18:31Z
      - Fixed Postgres 11 primary key query incompatibility in `pg_tapgen` by
        checking the `pg_index.indisprimary` column instead of
