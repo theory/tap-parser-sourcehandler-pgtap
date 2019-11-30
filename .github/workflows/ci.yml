@@ -19,8 +19,7 @@ jobs:
         run: |
           perl -V
           cpanm --installdeps .
-          perl Build.PL
-          perl Build
+          perl Build code
           prove -lv t
 
   testold:
