@@ -41,13 +41,17 @@ jobs:
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    name: 🐳 Docker Publish
     needs: [test, testold]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - name: Build Image
+        run: docker build --pull -t ${DOCKER_USER}/pg_prove:latest -t ${DOCKER_USER}/pg_prove:$(perl bin/pg_prove -V | awk '{print $2}') -f dist/Dockerfile .
       - name: Publish to Registry
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
         run: |
-          docker build --pull -t ${{ secrets.DOCKER_USER }}/pg_prove:latest -t ${{ secrets.DOCKER_USER }}/pg_prove:$(perl bin/pg_prove -V | awk '{print $2}') -f dist/Dockerfile .
-          echo "$${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
-          docker push ${{ secrets.DOCKER_USER }}/pg_prove
-          docker images
+          echo "${DOCKER_PASS}" | docker login -u ${DOCKER_USER} --password-stdin
+          docker push ${DOCKER_USER}/pg_prove
