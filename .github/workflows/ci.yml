@@ -47,6 +47,8 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Build Image
+        with:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
         run: docker build --pull -t ${DOCKER_USER}/pg_prove:latest -t ${DOCKER_USER}/pg_prove:$(perl bin/pg_prove -V | awk '{print $2}') -f dist/Dockerfile .
       - name: Publish to Registry
         env:
