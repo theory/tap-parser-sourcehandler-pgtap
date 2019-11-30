@@ -1,0 +1,53 @@
+name: CI
+on: [push]
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        perl: [ '5.30', '5.28', '5.26', '5.24' ]
+    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+      # Have to build on Windows to get scripts\psql.bat, so run each bit individually.
+      - run: perl -V
+      - run: cpanm --installdeps .
+      - run: perl Build.PL
+      - run: perl Build
+      - run: prove -lv t
+
+  testold:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        # https://github.com/shogo82148/actions-setup-perl/blob/master/src/installer.ts
+        perl: [ '5.22', '5.20', '5.18', '5.16', '5.14', '5.12', '5.10', '5.8']
+    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+      - run: perl -V
+      - run: cpanm --installdeps .
+      - run: prove -lv t
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [test, testold]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Publish to Registry
+        run: |
+          docker build --pull -t ${{ secrets.DOCKER_USER }}/pg_prove:latest -t ${{ secrets.DOCKER_USER }}/pg_prove:$(perl bin/pg_prove -V | awk '{print $2}') -f dist/Dockerfile .
+          echo "$${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+          docker push ${{ secrets.DOCKER_USER }}/pg_prove
+          docker images
