@@ -14,12 +14,14 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
-      # Have to build on Windows to get scripts\psql.bat, so run each bit individually.
-      - run: perl -V
-      - run: cpanm --installdeps .
-      - run: perl Build.PL
-      - run: perl Build
-      - run: prove -lv t
+      - name: Build and Test
+        # Have to build on Windows to get scripts\psql.bat.
+        run: |
+          perl -V
+          cpanm --installdeps .
+          perl Build.PL
+          perl Build
+          prove -lv t
 
   testold:
     strategy:
@@ -35,9 +37,11 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
-      - run: perl -V
-      - run: cpanm --installdeps .
-      - run: prove -lv t
+      - name: Test
+        run: |
+          perl -V
+          cpanm --installdeps .
+          prove -lv t
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
