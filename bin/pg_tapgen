@@ -259,9 +259,9 @@ sub functions_are {
     });
     my $allfuncs = $dbh->selectall_arrayref($sth, undef, $schema);
     return unless $allfuncs && @$allfuncs;
-    my @funcs=map{$_->[0]} @$allfuncs;
+    my %funcs=map{$_->[0] => undef} @$allfuncs;
     print "SELECT functions_are('$schema', ARRAY[\n    '",
-        join("',\n    '", @funcs),
+        join("',\n    '", sort keys %funcs),
         "'\n]);\n\n";
     $total_tests++;
     for my $row (@$allfuncs) {
