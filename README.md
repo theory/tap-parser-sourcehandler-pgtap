@@ -53,7 +53,7 @@ To install this module, type the following:
 To run it from a [Docker image](https://hub.docker.com/r/itheory/pg_prove/):
 
     docker pull itheory/pg_prove
-    curl -L https://git.io/fpgAk -o pg_prove && chmod +x pg_prove
+    curl -L https://git.io/JUdgg -o pg_prove && chmod +x pg_prove
     ./pg_prove --help
 
 Dependencies
