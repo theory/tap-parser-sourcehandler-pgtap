@@ -255,13 +255,16 @@ sub functions_are {
           FROM pg_catalog.pg_proc p
           JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
          WHERE n.nspname = ?
-         ORDER BY p.proname
+         ORDER BY p.proname, proargs
     });
     my $allfuncs = $dbh->selectall_arrayref($sth, undef, $schema);
     return unless $allfuncs && @$allfuncs;
-    my %funcs=map{$_->[0] => undef} @$allfuncs;
+    my @funcs = do {
+        my %seen;
+        grep { !$seen{$_}++ } map { $_->[0] } @$allfuncs;
+    };
     print "SELECT functions_are('$schema', ARRAY[\n    '",
-        join("',\n    '", sort keys %funcs),
+        join("',\n    '", @funcs),
         "'\n]);\n\n";
     $total_tests++;
     for my $row (@$allfuncs) {
