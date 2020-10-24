@@ -251,27 +251,30 @@ sub sequences_are {
 sub functions_are {
     my $schema = shift;
     my $sth = $dbh->prepare(q{
-        SELECT p.proname, md5(p.prosrc) as md5, proargtypes::text
+        SELECT p.proname, md5(p.prosrc) as md5, oidvectortypes(proargtypes) as proargs
           FROM pg_catalog.pg_proc p
           JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
          WHERE n.nspname = ?
-         ORDER BY p.proname
+         ORDER BY p.proname, proargs
     });
     my $allfuncs = $dbh->selectall_arrayref($sth, undef, $schema);
     return unless $allfuncs && @$allfuncs;
-    my @funcs=map{$_->[0]} @$allfuncs;
+    my @funcs = do {
+        my %seen;
+        grep { !$seen{$_}++ } map { $_->[0] } @$allfuncs;
+    };
     print "SELECT functions_are('$schema', ARRAY[\n    '",
         join("',\n    '", @funcs),
         "'\n]);\n\n";
     $total_tests++;
     for my $row (@$allfuncs) {
         my ($proname, $md5, $proargs)=@$row;
-        print qq{SELECT is(md5(p.prosrc), '$md5', 'Function $proname body should match checksum')
-  FROM pg_catalog.pg_proc p
-  JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
- WHERE n.nspname = '$schema'
-   AND proname = '$proname'
-   AND proargtypes::text = '$proargs';\n\n};
+        print qq{SELECT is(md5(p.prosrc), '$md5', 'Function $schema.$proname($proargs) body should match checksum')
+FROM pg_catalog.pg_namespace n
+  LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid
+                                AND proname = '$proname'
+                                AND oidvectortypes(proargtypes) = '$proargs'
+WHERE n.nspname = '$schema';\n\n};
         $total_tests++;
     }
 #
