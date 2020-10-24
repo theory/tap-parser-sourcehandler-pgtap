@@ -426,11 +426,12 @@ sub triggers_are {
       FROM pg_catalog.pg_trigger t
       JOIN pg_catalog.pg_class ct     ON ct.oid = t.tgrelid
       JOIN pg_catalog.pg_namespace nt ON nt.oid = ct.relnamespace
-      JOIN pg_catalog.pg_proc p       ON p.oid = t.tgfoid
+      JOIN pg_catalog.pg_proc p       ON p.oid  = t.tgfoid
       JOIN pg_catalog.pg_namespace ni ON ni.oid = p.pronamespace
      WHERE nt.nspname = ?
        AND ct.relname = ?
        AND NOT t.tgisinternal
+     ORDER BY t.tgname, ni.nspname, p.proname
     }, undef, $schema, $table);
 
     return unless $triggers && @{ $triggers };
