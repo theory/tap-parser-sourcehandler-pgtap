@@ -14,6 +14,8 @@ Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
        the report (#35).
      - Fixed documentation error for the scoring of files. It returns 0.9,
        not 1, for files ending in `.pg`.
+     - Highlighted the dependence on `psql` and its support for environment
+       variables, password file, and connection file in the documentation.
 
 3.35  2019-03-02T19:18:31Z
      - Fixed Postgres 11 primary key query incompatibility in `pg_tapgen` by

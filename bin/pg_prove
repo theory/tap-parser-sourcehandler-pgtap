@@ -85,6 +85,7 @@ sub process_args {
         } keys %{ $opts->{set} })
     );
 
+    # Set defaults.
     $self->{extensions} ||= ['.pg'];
     return;
 }
@@ -147,6 +148,13 @@ C<pg_prove> is a command-line application to run one or more
 L<pgTAP|https://pgtap.org/> tests in a PostgreSQL database. The output of the
 tests is harvested and processed by L<TAP::Harness|TAP::Harness> in order to
 summarize the results of the test.
+
+C<pg_prove> relies on L<C<psql>|https://www.postgresql.org/docs/current/app-psql.html>
+to run the tests, and therefor supports all of the
+L<environment variables|https://www.postgresql.org/docs/current/libpq-envars.html>,
+as well as the L<password file|https://www.postgresql.org/docs/current/libpq-pgpass.html>
+and L<service file|https://www.postgresql.org/docs/current/libpq-pgservice.html> read
+by C<psql>.
 
 Tests can be written and run in one of two ways, as SQL scripts or as
 xUnit-style database functions.
