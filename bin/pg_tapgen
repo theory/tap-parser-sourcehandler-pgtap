@@ -404,7 +404,7 @@ sub columns_are {
             : ('col_is_null( ', 'allow NULL');
         my ($def_fn, $def_desc) = $col->[3]
             ? ('col_has_default(  ', '')
-            : ('col_hasnt_default(', ' not ');
+            : ('col_hasnt_default(', ' not');
         print "SELECT has_column(       '$schema', '$table', '$col->[0]', '$desc should exist');\n",
             "SELECT col_type_is(      '$schema', '$table', '$col->[0]', '$col->[1]', '$desc should be type $col->[1]');\n",
             "SELECT $null_fn     '$schema', '$table', '$col->[0]', '$desc should $null_desc');\n",
