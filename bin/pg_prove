@@ -737,6 +737,9 @@ them in reverse order. Not relevant when used with C<--runtests>.
   pg_prove --archive tap.tar.gz
   pg_prove -a test_output.tar
 
+Send the TAP output to a TAP archive file as well as to the normal output
+destination. The archive formats supported are F<.tar> and F<.tar.gz>.
+
 =item C<-f>
 
 =item C<--formatter>
@@ -759,9 +762,6 @@ Show the X/Y test count as tests run when not verbose (default).
   pg_prove --nocount
 
 Disable the display of the X/Y test count as tests run.
-
-Send the TAP output to a TAP archive file as well as to the normal output
-destination. The archive formats supported are F<.tar> and F<.tar.gz>.
 
 =back
 
