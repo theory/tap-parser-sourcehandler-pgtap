@@ -31,6 +31,7 @@
 
 # Avoid generated files.
 ^t/scripts
+^latest_changes\.md
 
 # Avoid Pod tests.
 t/pod[^.]*\.t
