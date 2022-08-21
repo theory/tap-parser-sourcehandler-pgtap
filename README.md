@@ -4,7 +4,6 @@ TAP/Parser/SourceHandler/pgTAP version 3.37
 [![CPAN version](https://badge.fury.io/pl/TAP-Parser-SourceHandler-pgTAP.svg)](https://badge.fury.io/pl/TAP-Parser-SourceHandler-pgTAP)
 [![Docker release](https://img.shields.io/docker/v/itheory/pg_prove?label=🐳%20Docker&sort=semver)](https://hub.docker.com/r/itheory/pg_prove/)
 [![✅ Test Status](https://github.com/theory/tap-parser-sourcehandler-pgtap/actions/workflows/ci.yml/badge.svg)](https://github.com/theory/tap-parser-sourcehandler-pgtap/actions/workflows/ci.yml)
-[![🚀 Release Status](https://github.com/theory/tap-parser-sourcehandler-pgtap/actions/workflows/release.yml/badge.svg)](https://github.com/theory/tap-parser-sourcehandler-pgtap/actions/workflows/release.yml)
 
 This module adds support for executing [pgTAP](https://pgtap.org/) PostgreSQL
 tests under Test::Harness and `prove. This is useful for executing your Perl
