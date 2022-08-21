@@ -1,20 +1,22 @@
-name: Release
+name: 🚀 Release
 on:
   push:
     tags: [v*]
 jobs:
   release:
-    name: Release on GitHub
+    name: 🚀 Release
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - name: Check out the repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Setup Perl
       uses: shogo82148/actions-setup-perl@v1
     - name: Install Release Dependencies
       run: cpanm -qn Module::Build CPAN::Uploader
+
+    # CPAN
     - name: Package the Release
       id: package
       run: perl Build.PL && ./Build manifest && ./Build dist && echo "::set-output name=tarball::$(./Build tarball_name )"
@@ -24,6 +26,16 @@ jobs:
       env:
         CPANPASS: ${{ secrets.CPAN_PASSWORD }}
       run: cpan-upload --user DWHEELER --password "$CPANPASS" '${{ steps.package.outputs.tarball }}'
+
+    # Docker
+    - name: Build Image
+      run: docker build --pull -t ${{ secrets.DOCKER_USER }}/pg_prove:latest -t ${{ secrets.DOCKER_USER }}/pg_prove:${{ github.ref_name }} -f dist/Dockerfile .
+    - name: Log in to Docker Hub
+      run: echo ${{ secrets.DOCKER_PASS }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+    - name: Push the Image
+      run: docker push -a ${{ secrets.DOCKER_USER }}/pg_prove
+
+    # GitHub
     - name: Create GitHub Release
       id: release
       uses: actions/create-release@v1
