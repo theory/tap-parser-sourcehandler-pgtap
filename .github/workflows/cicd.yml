@@ -18,7 +18,8 @@ jobs:
         # Have to build on Windows to get scripts\psql.bat.
         run: |
           perl -V
-          cpanm --installdeps .
+          cpanm --notest --installdeps . # https://github.com/Perl-Toolchain-Gang/extutils-pl2bat/issues/7
+          perl Build.PL
           perl Build code
           prove -lv t
   publish:
