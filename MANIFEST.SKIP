@@ -33,8 +33,8 @@
 ^t/scripts
 ^latest_changes\.md
 
-# Avoid Pod tests.
-t/pod[^.]*\.t
+# Avoid extra tests.
+^xt/
 
 # Avoid docker files.
 ^dist/
