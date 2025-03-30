@@ -31,7 +31,7 @@ jobs:
     - name: Build Image
       run: docker build --pull -t ${{ secrets.DOCKER_USER }}/pg_prove:latest -t ${{ secrets.DOCKER_USER }}/pg_prove:${{ github.ref_name }} -f dist/Dockerfile .
     - name: Log in to Docker Hub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PASS }}

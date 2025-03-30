@@ -1,6 +1,6 @@
 Revision history for Perl extension TAP::Parser::SourceHandler::pgTAP.
 
-3.37
+3.37   2025-03-30T18:59:40Z
      - Silenced "Duplicate specification" warnings. Thanks to @tyboro for the
        PR (#40).
      - Removed Pod tests from the release distribution.
