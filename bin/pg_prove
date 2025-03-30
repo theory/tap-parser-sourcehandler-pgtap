@@ -40,7 +40,9 @@ sub process_args {
         Getopt::Long::Configure(qw(no_ignore_case bundling pass_through));
         # Silence "Duplicate specification" warnings, since we replace some of
         # App::Prove's options.
-        local $^W;
+        local $SIG{__WARN__} = sub {
+            warn @_ if $_[0] !~ /^Duplicate specification/
+        };
         return Getopt::Long::GetOptions(
             @_,
             'psql-bin|b=s' => \$opts->{psql},
